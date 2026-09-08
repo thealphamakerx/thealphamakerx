@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { razorpay } from "@/lib/razorpay";
+import { getRazorpay } from "@/lib/razorpay";
 
 export async function POST(request: NextRequest) {
   const session = await auth.api.getSession({ headers: request.headers });
@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Order is not payable" }, { status: 409 });
   }
 
-  const razorpayOrder = await razorpay.orders.create({
+  const razorpayOrder = await getRazorpay().orders.create({
     amount: order.total,
     currency: "INR",
     receipt: order.id,

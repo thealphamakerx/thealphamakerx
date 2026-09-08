@@ -1,7 +1,25 @@
 import { Resend } from "resend";
 import { formatPrice } from "@/lib/pricing";
 
-export const resend = new Resend(process.env.RESEND_API_KEY);
+// Lazy singleton: constructing Resend() throws synchronously when the API
+// key is missing, which would otherwise crash route module evaluation (and
+// the build's page-data collection step) in any environment where
+// RESEND_API_KEY isn't set yet. Only pay that cost when an email is
+// actually sent.
+let resendClient: Resend | null | undefined;
+
+function getResendClient(): Resend | null {
+  if (resendClient !== undefined) return resendClient;
+
+  if (!process.env.RESEND_API_KEY) {
+    console.warn("RESEND_API_KEY is not set — skipping email send.");
+    resendClient = null;
+    return resendClient;
+  }
+
+  resendClient = new Resend(process.env.RESEND_API_KEY);
+  return resendClient;
+}
 
 const FROM = process.env.RESEND_FROM_EMAIL ?? "orders@thealphamakerx.in";
 
@@ -28,6 +46,9 @@ export async function sendOrderStatusEmail({
   const copy = STATUS_EMAIL_COPY[status];
   if (!copy) return;
 
+  const resend = getResendClient();
+  if (!resend) return;
+
   await resend.emails.send({
     from: FROM,
     to,
@@ -45,6 +66,9 @@ export async function sendOrderConfirmationEmail({
   orderId: string;
   total: number;
 }) {
+  const resend = getResendClient();
+  if (!resend) return;
+
   await resend.emails.send({
     from: FROM,
     to,
