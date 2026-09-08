@@ -1,26 +1,111 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --radius: 0.875rem;
+
+  --background: #fff9f5;
+  --foreground: #1a1a1a;
+
+  --card: #ffffff;
+  --card-foreground: #1a1a1a;
+
+  --popover: #ffffff;
+  --popover-foreground: #1a1a1a;
+
+  --primary: #e4572e;
+  --primary-foreground: #ffffff;
+
+  --secondary: #f5efe8;
+  --secondary-foreground: #1a1a1a;
+
+  --muted: #f5efe8;
+  --muted-foreground: #7a7a7a;
+
+  --accent: #fbeae3;
+  --accent-foreground: #e4572e;
+
+  --destructive: #d64545;
+  --destructive-foreground: #ffffff;
+
+  --success: #2e8b57;
+  --success-foreground: #ffffff;
+
+  --border: #efe7de;
+  --input: #efe7de;
+  --ring: #e4572e;
+
+  /* Fixed dark chrome for header/footer — intentionally NOT redefined in the
+     dark-mode media query below, so it stays dark regardless of the
+     visitor's system theme (unlike --foreground/--background, which swap). */
+  --chrome: #1a1a1a;
+  --chrome-foreground: #fff9f5;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chrome: var(--chrome);
+  --color-chrome-foreground: var(--chrome-foreground);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  --font-sans: var(--font-inter);
+  --font-heading: var(--font-manrope);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #171310;
+    --foreground: #f5efe8;
+
+    --card: #201b17;
+    --card-foreground: #f5efe8;
+
+    --popover: #201b17;
+    --popover-foreground: #f5efe8;
+
+    --secondary: #2a231d;
+    --secondary-foreground: #f5efe8;
+
+    --muted: #2a231d;
+    --muted-foreground: #a89e94;
+
+    --accent: #33251e;
+    --accent-foreground: #ff7a4d;
+
+    --border: #33291f;
+    --input: #33291f;
   }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading), var(--font-sans), sans-serif;
 }

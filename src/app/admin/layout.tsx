@@ -1,8 +1,22 @@
-export default function AdminLayout({ children }: LayoutProps<"/admin">) {
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
+import { auth } from "@/lib/auth";
+import { AdminSidebar } from "@/components/admin/sidebar";
+import { Toaster } from "@/components/ui/toast";
+
+export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
+  const session = await auth.api.getSession({ headers: await headers() });
+
+  if (!session || (session.user as { role?: string }).role !== "ADMIN") {
+    redirect("/auth/signin");
+  }
+
   return (
-    <div className="flex min-h-screen flex-1">
-      <aside className="w-64 border-r px-4 py-6">Admin</aside>
-      <div className="flex-1 px-6 py-6">{children}</div>
-    </div>
+    <Toaster>
+      <div className="flex min-h-screen flex-1">
+        <AdminSidebar name={session.user.name} email={session.user.email} />
+        <div className="flex-1 overflow-x-auto px-8 py-8">{children}</div>
+      </div>
+    </Toaster>
   );
 }

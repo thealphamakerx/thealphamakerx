@@ -1,75 +1,117 @@
-enum Role {
+enum DiscountType {
   @@type("pg/text@1")
-  CUSTOMER = "CUSTOMER"
-  ADMIN = "ADMIN"
+  PERCENTAGE = "PERCENTAGE"
+  FIXED = "FIXED"
+}
+
+enum ReviewStatus {
+  @@type("pg/text@1")
+  PENDING = "PENDING"
+  APPROVED = "APPROVED"
+  REJECTED = "REJECTED"
 }
 
 enum OrderStatus {
   @@type("pg/text@1")
   PENDING = "PENDING"
-  CONFIRMED = "CONFIRMED"
-  PROCESSING = "PROCESSING"
-  PACKED = "PACKED"
-  SHIPPED = "SHIPPED"
-  OUT_FOR_DELIVERY = "OUT_FOR_DELIVERY"
-  DELIVERED = "DELIVERED"
+  PAID = "PAID"
   CANCELLED = "CANCELLED"
-  RETURN_REQUESTED = "RETURN_REQUESTED"
-  RETURN_APPROVED = "RETURN_APPROVED"
-  RETURN_RECEIVED = "RETURN_RECEIVED"
-  REFUND_PROCESSING = "REFUND_PROCESSING"
   REFUNDED = "REFUNDED"
 }
 
+// Better Auth owns these four tables directly (src/prisma/auth-schema.sql),
+// outside this contract's normal ownership. They're declared here only so
+// `db update`/`migration plan` recognize them as intentionally-present and
+// never plan a DROP for them — @@control(external) means "expected to
+// exist, no DDL" (the same policy Supabase's own auth/storage tables use).
+// Everything else in this contract stores the Better Auth user id as a
+// plain string field — no Prisma-level relation to these models.
+
 model User {
-  id        String @id @default(uuid())
-  email     String @unique
-  name      String?
-  role      Role   @default(CUSTOMER)
+  id            String  @id
+  name          String
+  email         String  @unique
+  emailVerified Boolean @default(false)
+  image         String?
+  role          String  @default("CUSTOMER")
 
   createdAt TimestamptzString @default(now())
   updatedAt temporal.updatedAtString()
+
+  @@control(external)
 }
 
-model Category {
-  id   String @id @default(uuid())
-  name String
-  slug String @unique
+model Session {
+  id        String @id
+  userId    String
+  token     String @unique
+  expiresAt TimestamptzString
+  ipAddress String?
+  userAgent String?
 
   createdAt TimestamptzString @default(now())
   updatedAt temporal.updatedAtString()
+
+  @@control(external)
 }
+
+model Account {
+  id                    String  @id
+  userId                String
+  accountId             String
+  providerId            String
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  TimestamptzString?
+  refreshTokenExpiresAt TimestamptzString?
+  scope                 String?
+  password              String?
+
+  createdAt TimestamptzString @default(now())
+  updatedAt temporal.updatedAtString()
+
+  @@control(external)
+}
+
+model Verification {
+  id         String @id
+  identifier String
+  value      String
+  expiresAt  TimestamptzString
+
+  createdAt TimestamptzString @default(now())
+  updatedAt temporal.updatedAtString()
+
+  @@control(external)
+}
+
+// Digital info-products: no shipping, no physical variants, no stock.
+// A product is bought once and unlocks `digitalAccessUrl` for the buyer.
 
 model Product {
-  id          String  @id @default(uuid())
-  name        String
-  slug        String  @unique
-  description String?
-  price       Int
-  categoryId  String
+  id               String  @id @default(uuid())
+  name             String
+  slug             String  @unique
+  description      String?
+  price            Int
+  badge            String?
+  // External link fallback (Drive/Dropbox/etc) — used if digitalFileKey isn't set.
+  digitalAccessUrl String?
+  // Cloudflare R2 object key for an uploaded PDF/ZIP. When set, the access
+  // endpoint generates a short-lived presigned download URL instead of
+  // redirecting to digitalAccessUrl.
+  digitalFileKey   String?
+  digitalFileName  String?
 
-  category Category @relation(fields: [categoryId], references: [id])
-
-  createdAt TimestamptzString @default(now())
-  updatedAt temporal.updatedAtString()
-
-  @@index([categoryId])
-}
-
-model ProductVariant {
-  id        String @id @default(uuid())
-  productId String
-  sku       String @unique
-  name      String
-  price     Int
-  stock     Int    @default(0)
-
-  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  // Lets seeded/migrated social proof (from before this system existed)
+  // display without faking individual Review rows. When set, the storefront
+  // shows these instead of the live Review aggregate.
+  ratingOverride      Float?
+  reviewCountOverride Int?
 
   createdAt TimestamptzString @default(now())
   updatedAt temporal.updatedAtString()
-
-  @@index([productId])
 }
 
 model ProductImage {
@@ -84,74 +126,97 @@ model ProductImage {
 }
 
 model Review {
-  id        String  @id @default(uuid())
+  id        String       @id @default(uuid())
   productId String
   userId    String
+  orderId   String
   rating    Int
   comment   String?
+  status    ReviewStatus @default(PENDING)
 
   product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
-  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   createdAt TimestamptzString @default(now())
 
+  @@unique([productId, userId])
   @@index([productId])
   @@index([userId])
 }
 
-model Address {
-  id         String  @id @default(uuid())
-  userId     String
-  fullName   String
-  phone      String
-  line1      String
-  line2      String?
-  city       String
-  state      String
-  postalCode String
-  country    String
+model Wishlist {
+  id        String @id @default(uuid())
+  userId    String
+  productId String
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 
+  createdAt TimestamptzString @default(now())
+
+  @@unique([userId, productId])
   @@index([userId])
 }
 
+model Coupon {
+  id                String       @id @default(uuid())
+  code              String       @unique
+  discountType      DiscountType
+  discountValue     Int
+  minOrderAmount    Int          @default(0)
+  maxDiscountAmount Int?
+  usageLimit        Int?
+  perCustomerLimit  Int?
+  startsAt          TimestamptzString?
+  expiresAt         TimestamptzString?
+  active            Boolean      @default(true)
+
+  createdAt TimestamptzString @default(now())
+  updatedAt temporal.updatedAtString()
+}
+
+model AuditLog {
+  id           String  @id @default(uuid())
+  actorUserId  String
+  action       String
+  entityType   String
+  entityId     String
+  beforeValue  String?
+  afterValue   String?
+
+  createdAt TimestamptzString @default(now())
+
+  @@index([entityType, entityId])
+  @@index([actorUserId])
+}
+
 model Order {
-  id          String      @id @default(uuid())
-  userId      String
-  addressId   String
-  status      OrderStatus @default(PENDING)
-  subtotal    Int
-  shippingFee Int
-  total       Int
+  id             String      @id @default(uuid())
+  userId         String
+  status         OrderStatus @default(PENDING)
+  subtotal       Int
+  discountAmount Int         @default(0)
+  couponCode     String?
+  total          Int
 
   razorpayOrderId   String? @unique
   razorpayPaymentId String?
-
-  user    User    @relation(fields: [userId], references: [id])
-  address Address @relation(fields: [addressId], references: [id])
 
   createdAt TimestamptzString @default(now())
   updatedAt temporal.updatedAtString()
 
   @@index([userId])
-  @@index([addressId])
 }
 
 model OrderItem {
-  id            String @id @default(uuid())
-  orderId       String
-  variantId     String
-  productName   String
-  variantName   String
-  sku           String
-  quantity      Int
-  unitPrice     Int
-  finalPrice    Int
+  id          String @id @default(uuid())
+  orderId     String
+  productId   String
+  productName String
+  quantity    Int
+  unitPrice   Int
+  finalPrice  Int
 
-  order   Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  variant ProductVariant @relation(fields: [variantId], references: [id])
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
   @@index([orderId])
-  @@index([variantId])
+  @@index([productId])
 }

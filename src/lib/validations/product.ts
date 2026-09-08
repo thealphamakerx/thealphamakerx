@@ -5,7 +5,8 @@ export const productSchema = z.object({
   slug: z.string().min(1),
   description: z.string().optional(),
   price: z.number().int().nonnegative(),
-  categoryId: z.string(),
+  badge: z.string().optional(),
+  digitalAccessUrl: z.string().url().optional(),
 });
 
 export type ProductInput = z.infer<typeof productSchema>;
