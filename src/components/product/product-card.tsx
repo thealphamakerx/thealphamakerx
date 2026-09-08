@@ -63,7 +63,7 @@ export function ProductCard({
       </Link>
 
       <Link href={`/products/${slug}`} className={buttonVariants({ size: "lg" })}>
-        Join Now
+        Buy Now
       </Link>
     </div>
   );

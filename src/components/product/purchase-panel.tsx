@@ -18,7 +18,7 @@ export function PurchasePanel({ productId, price }: { productId: string; price: 
     setTimeout(() => setAdded(false), 2000);
   }
 
-  function handleJoinNow() {
+  function handleBuyNow() {
     addItem({ productId, quantity });
     router.push("/checkout");
   }
@@ -51,8 +51,8 @@ export function PurchasePanel({ productId, price }: { productId: string; price: 
         <Button size="lg" variant="outline" className="flex-1" onClick={handleAddToCart}>
           {added ? "Added ✓" : "Add to Cart"}
         </Button>
-        <Button size="lg" className="flex-1" onClick={handleJoinNow}>
-          Join Now
+        <Button size="lg" className="flex-1" onClick={handleBuyNow}>
+          Buy Now
         </Button>
       </div>
     </div>

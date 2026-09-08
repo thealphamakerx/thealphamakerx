@@ -15,7 +15,7 @@ export function Hero() {
         {siteConfig.heroSubheadline}
       </p>
       <Link href="/shop" className={buttonVariants({ size: "lg", className: "mt-2" })}>
-        Join Now
+        Shop Now
       </Link>
     </section>
   );

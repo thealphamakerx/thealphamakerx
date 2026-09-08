@@ -9,8 +9,8 @@ export function Cta() {
           Ready to Become the Man You&apos;re Meant to Be?
         </h2>
         <p className="max-w-md text-sm opacity-90 md:text-base">
-          Instant access, practical guides, no fluff. Join thousands of men already building
-          real confidence.
+          Instant access, practical guides, no fluff. Trusted by thousands of men already
+          building real confidence.
         </p>
         <Link
           href="/shop"
