@@ -2,26 +2,44 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { getCartSummary } from "@/lib/cart";
-import { rateLimit } from "@/lib/rate-limit";
+import { rateLimit, getClientIp } from "@/lib/rate-limit";
 import type { CartItem } from "@/types";
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export async function POST(request: NextRequest) {
   const session = await auth.api.getSession({ headers: request.headers });
-  if (!session) {
-    return NextResponse.json({ error: "Not signed in" }, { status: 401 });
+  const body = await request.json();
+
+  let userId: string;
+  let email: string | null;
+
+  if (session) {
+    userId = session.user.id;
+    email = session.user.email;
+  } else {
+    const guestEmail = typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
+    if (!EMAIL_RE.test(guestEmail)) {
+      return NextResponse.json(
+        { error: "A valid email is required to check out as a guest" },
+        { status: 400 }
+      );
+    }
+    userId = `guest:${guestEmail}`;
+    email = guestEmail;
   }
 
-  const limit = rateLimit(`checkout:${session.user.id}`, { windowMs: 60_000, max: 10 });
+  const rateLimitKey = session ? session.user.id : getClientIp(request);
+  const limit = rateLimit(`checkout:${rateLimitKey}`, { windowMs: 60_000, max: 10 });
   if (!limit.allowed) {
     return NextResponse.json({ error: "Too many attempts, please slow down" }, { status: 429 });
   }
 
-  const body = await request.json();
   const items: CartItem[] = body.items ?? [];
 
   const summary = await getCartSummary(items, {
     couponCode: body.couponCode,
-    userId: session.user.id,
+    userId,
   });
   if (summary.lines.length === 0) {
     return NextResponse.json({ error: "Cart is empty" }, { status: 400 });
@@ -29,7 +47,8 @@ export async function POST(request: NextRequest) {
 
   const order = await db.transaction(async (tx) => {
     const newOrder = await tx.orm.public.Order.create({
-      userId: session.user.id,
+      userId,
+      email,
       status: "PENDING",
       subtotal: summary.subtotal,
       discountAmount: summary.discountAmount,

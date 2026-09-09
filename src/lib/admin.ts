@@ -40,7 +40,7 @@ export async function getRecentOrdersAdmin(limit = 10) {
 
   return orders.map((order) => ({
     ...order,
-    customerEmail: emailById.get(order.userId) ?? "—",
+    customerEmail: order.email ?? emailById.get(order.userId) ?? "—",
   }));
 }
 

@@ -512,6 +512,13 @@
                   "kind": "scalar"
                 }
               },
+              "email": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
               "id": {
                 "nullable": false,
                 "type": {
@@ -586,6 +593,9 @@
                 },
                 "discountAmount": {
                   "column": "discountAmount"
+                },
+                "email": {
+                  "column": "email"
                 },
                 "id": {
                   "column": "id"
@@ -1659,6 +1669,11 @@
                   "nativeType": "int4",
                   "nullable": false
                 },
+                "email": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
                 "id": {
                   "codecId": "pg/text@1",
                   "nativeType": "text",
@@ -2368,7 +2383,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "b91d2bc713748f6859ffbbcde5ac9695c30c44540c3a8fccc2ce3ee8cd0f81de"
+    "storageHash": "3cea117ac5f53c36f64d0db8b3d8caa173f66be6312d6ef37f2f8dc67dac2bee"
   },
   "execution": {
     "executionHash": "42a106b20a2ab980220bd917f4a382a69bdfd4a373c833b0ba6d1cb7c03ade23",

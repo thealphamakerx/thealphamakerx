@@ -57,3 +57,17 @@ export async function getSignedDownloadUrl(key: string, fileName?: string | null
   // Short-lived — regenerated on every access request, never stored.
   return getSignedUrl(client, command, { expiresIn: 300 });
 }
+
+// Shared by every access route (authenticated, guest-token, admin preview):
+// prefer the R2-hosted file, fall back to an external link, or null if
+// nothing has been uploaded yet for this product.
+export async function getProductDownloadUrl(product: {
+  digitalFileKey: string | null;
+  digitalFileName: string | null;
+  digitalAccessUrl: string | null;
+}) {
+  if (product.digitalFileKey) {
+    return getSignedDownloadUrl(product.digitalFileKey, product.digitalFileName);
+  }
+  return product.digitalAccessUrl ?? null;
+}

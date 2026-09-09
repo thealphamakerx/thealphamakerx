@@ -79,8 +79,10 @@ export default async function AdminOrderDetailPage({
         <Card>
           <CardContent className="flex flex-col gap-1">
             <h2 className="text-sm font-medium">Customer</h2>
-            <p className="text-sm text-muted-foreground">{customer?.name ?? "—"}</p>
-            <p className="text-sm text-muted-foreground">{customer?.email ?? "—"}</p>
+            <p className="text-sm text-muted-foreground">
+              {customer?.name ?? (order.userId.startsWith("guest:") ? "Guest" : "—")}
+            </p>
+            <p className="text-sm text-muted-foreground">{order.email ?? customer?.email ?? "—"}</p>
           </CardContent>
         </Card>
 

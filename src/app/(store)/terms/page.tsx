@@ -25,9 +25,11 @@ export default function TermsPage() {
 
       <LegalSection title="2. Account Registration">
         <p>
-          You must create an account with accurate information to purchase our products. You
-          are responsible for keeping your login credentials secure and for all activity that
-          happens under your account.
+          You can purchase as a guest using just a valid email address, or create an account
+          for permanent order history and faster future checkouts. If you do create an
+          account, you&apos;re responsible for keeping your login credentials secure and for
+          all activity that happens under it. Either way, provide an accurate email address —
+          it&apos;s how we deliver your purchase and any order-related communication.
         </p>
       </LegalSection>
 

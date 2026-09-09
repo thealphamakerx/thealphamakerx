@@ -61,10 +61,14 @@ export async function sendOrderConfirmationEmail({
   to,
   orderId,
   total,
+  downloadUrl,
 }: {
   to: string;
   orderId: string;
   total: number;
+  /** Guest orders don't have an account Purchases page — link straight to
+   *  the token-protected public download page instead. */
+  downloadUrl?: string;
 }) {
   const resend = getResendClient();
   if (!resend) return;
@@ -77,7 +81,11 @@ export async function sendOrderConfirmationEmail({
       <p>Your purchase is confirmed and your access is unlocked.</p>
       <p><strong>Order:</strong> #${orderId.slice(0, 8).toUpperCase()}</p>
       <p><strong>Total:</strong> ${formatPrice(total)}</p>
-      <p>You can access it any time from your account's Purchases page.</p>
+      ${
+        downloadUrl
+          ? `<p><a href="${downloadUrl}">Click here to get your files</a></p>`
+          : `<p>You can access it any time from your account's Purchases page.</p>`
+      }
     `,
   });
 }

@@ -19,16 +19,22 @@ type CartSummary = {
   total: number;
 };
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export default function CheckoutPage() {
   const router = useRouter();
   const { items, clearCart } = useCart();
-  const { data: session } = useSession();
+  const { data: session, isPending: sessionPending } = useSession();
   const [summary, setSummary] = useState<CartSummary | null>(null);
   const [couponInput, setCouponInput] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState("");
+  const [guestEmail, setGuestEmail] = useState("");
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [scriptReady, setScriptReady] = useState(false);
+
+  const isGuest = !sessionPending && !session;
+  const guestEmailValid = EMAIL_RE.test(guestEmail.trim());
 
   useEffect(() => {
     if (items.length === 0) return;
@@ -57,7 +63,11 @@ export default function CheckoutPage() {
     const checkoutRes = await fetch("/api/checkout", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ items, couponCode: appliedCoupon || undefined }),
+      body: JSON.stringify({
+        items,
+        couponCode: appliedCoupon || undefined,
+        email: isGuest ? guestEmail.trim() : undefined,
+      }),
     });
 
     if (!checkoutRes.ok) {
@@ -91,7 +101,7 @@ export default function CheckoutPage() {
       name: siteConfig.name,
       prefill: {
         name: session?.user.name,
-        email: session?.user.email,
+        email: session?.user.email ?? guestEmail.trim(),
       },
       theme: { color: "#e4572e" },
       handler: async (response) => {
@@ -132,6 +142,29 @@ export default function CheckoutPage() {
       />
 
       <h1 className="text-2xl font-semibold">Checkout</h1>
+
+      {isGuest && (
+        <div className="flex flex-col gap-2 rounded-2xl border border-border p-6">
+          <label htmlFor="guest-email" className="text-sm font-medium">
+            Email
+          </label>
+          <Input
+            id="guest-email"
+            type="email"
+            placeholder="you@example.com"
+            value={guestEmail}
+            onChange={(e) => setGuestEmail(e.target.value)}
+          />
+          <p className="text-xs text-muted-foreground">
+            No account needed — we&apos;ll send your download link here and show it on the
+            next page.{" "}
+            <a href="/auth/signin" className="underline hover:text-foreground">
+              Sign in
+            </a>{" "}
+            instead to keep a permanent order history.
+          </p>
+        </div>
+      )}
 
       <div className="flex flex-col gap-3 rounded-2xl border border-border p-6">
         {summary ? (
@@ -192,7 +225,11 @@ export default function CheckoutPage() {
 
       {submitError && <p className="text-sm text-destructive">{submitError}</p>}
 
-      <Button size="lg" disabled={submitting || !summary} onClick={handlePay}>
+      <Button
+        size="lg"
+        disabled={submitting || !summary || (isGuest && !guestEmailValid)}
+        onClick={handlePay}
+      >
         {submitting ? "Processing…" : "Pay Securely"}
       </Button>
 

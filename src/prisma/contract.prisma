@@ -191,6 +191,7 @@ model AuditLog {
 model Order {
   id             String      @id @default(uuid())
   userId         String
+  email          String?
   status         OrderStatus @default(PENDING)
   subtotal       Int
   discountAmount Int         @default(0)

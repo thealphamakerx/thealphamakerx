@@ -5,14 +5,21 @@ import { getRazorpay } from "@/lib/razorpay";
 
 export async function POST(request: NextRequest) {
   const session = await auth.api.getSession({ headers: request.headers });
-  if (!session) {
-    return NextResponse.json({ error: "Not signed in" }, { status: 401 });
-  }
 
   const { orderId } = await request.json();
 
   const order = await db.orm.public.Order.first({ id: orderId });
-  if (!order || order.userId !== session.user.id) {
+  if (!order) {
+    return NextResponse.json({ error: "Order not found" }, { status: 404 });
+  }
+
+  // Signed-in orders are owned by the session; guest orders have no
+  // account to check against, so the orderId itself — a UUID minted
+  // server-side and only ever handed to the browser that created it —
+  // is the bearer credential, same trust model as the guest download
+  // token.
+  const isOwner = session ? order.userId === session.user.id : order.userId.startsWith("guest:");
+  if (!isOwner) {
     return NextResponse.json({ error: "Order not found" }, { status: 404 });
   }
   if (order.status !== "PENDING") {

@@ -30,7 +30,7 @@ const FAQS = [
   {
     question: "Do I need to create an account to buy?",
     answer:
-      "Yes, a free account lets us keep your purchase and download link permanently available to you, and lets you track your order history.",
+      "No — you can check out as a guest with just your email. You'll get your download link on the confirmation page and by email. Creating a free account is optional and just gives you a permanent order history.",
   },
 ];
 

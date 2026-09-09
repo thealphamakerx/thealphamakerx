@@ -1,6 +1,8 @@
 import { db } from "@/lib/db";
 import { getUserById } from "@/lib/users";
 import { sendOrderConfirmationEmail } from "@/lib/email";
+import { createOrderAccessToken } from "@/lib/order-token";
+import { siteConfig } from "@/config/site";
 
 export async function getOrderById(orderId: string) {
   const order = await db.orm.public.Order.first({ id: orderId });
@@ -38,9 +40,18 @@ export async function confirmOrderPayment({
     .where({ id: order.id })
     .update({ status: "PAID", razorpayPaymentId: paymentId });
 
-  const user = await getUserById(order.userId);
-  if (user) {
-    await sendOrderConfirmationEmail({ to: user.email, orderId: order.id, total: order.total });
+  // Guest orders store the buyer's email directly (no account to join
+  // against); logged-in orders fall back to the account email for orders
+  // placed before this column existed.
+  const buyerEmail = order.email ?? (await getUserById(order.userId))?.email ?? null;
+  if (buyerEmail) {
+    const downloadUrl = `${siteConfig.url}/download/${createOrderAccessToken(order.id)}`;
+    await sendOrderConfirmationEmail({
+      to: buyerEmail,
+      orderId: order.id,
+      total: order.total,
+      downloadUrl,
+    });
   }
 
   return { order: { ...order, status: "PAID" as const }, alreadyConfirmed: false };
