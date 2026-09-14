@@ -32,7 +32,13 @@ export function verifyPaymentSignature({
     .update(`${orderId}|${paymentId}`)
     .digest("hex");
 
-  return expected === signature;
+  return safeEqual(expected, signature);
+}
+
+function safeEqual(expected: string, received: string) {
+  const a = Buffer.from(expected);
+  const b = Buffer.from(received);
+  return a.length === b.length && crypto.timingSafeEqual(a, b);
 }
 
 export function verifyWebhookSignature({
@@ -47,5 +53,5 @@ export function verifyWebhookSignature({
     .update(body)
     .digest("hex");
 
-  return expected === signature;
+  return safeEqual(expected, signature);
 }

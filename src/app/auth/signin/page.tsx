@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { signIn } from "@/lib/auth-client";
+import { signIn, isGoogleSignInEnabled } from "@/lib/auth-client";
+import { GoogleSignIn } from "@/components/shared/google-sign-in";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -63,6 +64,17 @@ export default function SignInPage() {
         <Button type="submit" disabled={loading}>
           {loading ? "Signing in…" : "Sign In"}
         </Button>
+
+        {isGoogleSignInEnabled && (
+          <>
+            <div className="flex items-center gap-3 text-xs text-muted-foreground">
+              <span className="h-px flex-1 bg-border" />
+              or
+              <span className="h-px flex-1 bg-border" />
+            </div>
+            <GoogleSignIn callbackURL="/account/orders" />
+          </>
+        )}
       </form>
     </main>
   );

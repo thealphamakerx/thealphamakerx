@@ -12,7 +12,17 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Too many attempts" }, { status: 429 });
   }
 
-  const { razorpayOrderId, razorpayPaymentId, razorpaySignature } = await request.json();
+  const { razorpayOrderId, razorpayPaymentId, razorpaySignature } = await request
+    .json()
+    .catch(() => ({}));
+
+  if (
+    typeof razorpayOrderId !== "string" ||
+    typeof razorpayPaymentId !== "string" ||
+    typeof razorpaySignature !== "string"
+  ) {
+    return NextResponse.json({ error: "Invalid payment details" }, { status: 400 });
+  }
 
   const isValid = verifyPaymentSignature({
     orderId: razorpayOrderId,

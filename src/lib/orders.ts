@@ -36,9 +36,35 @@ export async function confirmOrderPayment({
   if (!order) return { order: null, alreadyConfirmed: false };
   if (order.status !== "PENDING") return { order, alreadyConfirmed: true };
 
-  await db.orm.public.Order
-    .where({ id: order.id })
-    .update({ status: "PAID", razorpayPaymentId: paymentId });
+  const transitioned = await markOrderPaid(order, paymentId);
+  return { order: { ...order, status: "PAID" as const }, alreadyConfirmed: !transitioned };
+}
+
+/**
+ * A 100%-off coupon leaves nothing to charge (and Razorpay rejects zero-amount
+ * orders), so these are confirmed without a payment.
+ */
+export async function confirmFreeOrder(orderId: string) {
+  const order = await db.orm.public.Order.first({ id: orderId });
+  if (!order || order.total !== 0) return null;
+  if (order.status === "PENDING") await markOrderPaid(order, null);
+  return { ...order, status: "PAID" as const };
+}
+
+/**
+ * Conditional on status so concurrent verify + webhook calls can't both
+ * transition the order and double-send the email. Returns whether this call
+ * did the transition.
+ */
+async function markOrderPaid(
+  order: { id: string; userId: string; email: string | null; total: number },
+  paymentId: string | null
+) {
+  const updated = await db.orm.public.Order
+    .where({ id: order.id, status: "PENDING" })
+    .select("id")
+    .update({ status: "PAID", ...(paymentId ? { razorpayPaymentId: paymentId } : {}) });
+  if (!updated) return false;
 
   // Guest orders store the buyer's email directly (no account to join
   // against); logged-in orders fall back to the account email for orders
@@ -46,15 +72,21 @@ export async function confirmOrderPayment({
   const buyerEmail = order.email ?? (await getUserById(order.userId))?.email ?? null;
   if (buyerEmail) {
     const downloadUrl = `${siteConfig.url}/download/${createOrderAccessToken(order.id)}`;
-    await sendOrderConfirmationEmail({
-      to: buyerEmail,
-      orderId: order.id,
-      total: order.total,
-      downloadUrl,
-    });
+    // The payment is already recorded — a mail outage must not turn that
+    // into a failed checkout.
+    try {
+      await sendOrderConfirmationEmail({
+        to: buyerEmail,
+        orderId: order.id,
+        total: order.total,
+        downloadUrl,
+      });
+    } catch (error) {
+      console.error(`Order ${order.id}: confirmation email failed`, error);
+    }
   }
 
-  return { order: { ...order, status: "PAID" as const }, alreadyConfirmed: false };
+  return true;
 }
 
 /**

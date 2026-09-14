@@ -11,6 +11,34 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "@/components/ui/toast";
 import { formatPrice } from "@/lib/pricing";
 
+// Mirrors MAX_UPLOAD_BYTES in lib/storage (server-only module); the server
+// re-checks both before signing and after the upload lands.
+const MAX_UPLOAD_BYTES = 500 * 1024 * 1024;
+
+/** PUT straight to object storage, reporting progress (fetch can't). */
+function putFile(
+  url: string,
+  file: File,
+  headers: Record<string, string>,
+  onProgress: (percent: number) => void
+) {
+  return new Promise<void>((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("PUT", url);
+    // Exactly the headers the URL was signed with.
+    for (const [name, value] of Object.entries(headers)) xhr.setRequestHeader(name, value);
+    xhr.upload.onprogress = (event) => {
+      if (event.lengthComputable) onProgress(Math.round((event.loaded / event.total) * 100));
+    };
+    xhr.onload = () =>
+      xhr.status >= 200 && xhr.status < 300
+        ? resolve()
+        : reject(new Error(`Storage rejected the upload (HTTP ${xhr.status})`));
+    xhr.onerror = () => reject(new Error("Network error during upload"));
+    xhr.send(file);
+  });
+}
+
 export function ProductAccessRow({
   id,
   slug,
@@ -31,6 +59,7 @@ export function ProductAccessRow({
   const [url, setUrl] = useState(digitalAccessUrl ?? "");
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [progress, setProgress] = useState(0);
 
   async function handleSaveUrl() {
     setSaving(true);
@@ -50,27 +79,60 @@ export function ProductAccessRow({
 
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
+    if (fileInputRef.current) fileInputRef.current.value = "";
     if (!file) return;
 
-    setUploading(true);
+    // Some OSes report no MIME type for .zip — fall back to the extension.
+    const contentType =
+      file.type ||
+      (/\.pdf$/i.test(file.name) ? "application/pdf" : /\.zip$/i.test(file.name) ? "application/zip" : "");
 
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("productId", id);
-
-    const res = await fetch("/api/upload", { method: "POST", body: formData });
-
-    setUploading(false);
-
-    if (!res.ok) {
-      const data = await res.json().catch(() => null);
-      toast.add({ title: "Upload failed", description: data?.error, type: "error" });
+    if (file.size > MAX_UPLOAD_BYTES) {
+      toast.add({ title: "Upload failed", description: "File is too large (max 500MB)", type: "error" });
       return;
     }
 
-    if (fileInputRef.current) fileInputRef.current.value = "";
-    toast.add({ title: `Uploaded "${file.name}"`, type: "success" });
-    router.refresh();
+    setUploading(true);
+    setProgress(0);
+    // Closing the tab mid-upload would silently abandon a large file.
+    const warnOnLeave = (event: BeforeUnloadEvent) => event.preventDefault();
+    window.addEventListener("beforeunload", warnOnLeave);
+
+    try {
+      const startRes = await fetch("/api/upload", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ productId: id, contentType, size: file.size, fileName: file.name }),
+      });
+      const start = await startRes.json().catch(() => null);
+      if (!startRes.ok || !start?.uploadUrl) {
+        throw new Error(start?.error ?? "Could not start upload");
+      }
+
+      await putFile(start.uploadUrl, file, start.headers, setProgress);
+
+      const completeRes = await fetch("/api/upload/complete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ productId: id, key: start.key, fileName: file.name }),
+      });
+      const complete = await completeRes.json().catch(() => null);
+      if (!completeRes.ok) {
+        throw new Error(complete?.error ?? "Could not save upload");
+      }
+
+      toast.add({ title: `Uploaded "${file.name}"`, type: "success" });
+      router.refresh();
+    } catch (error) {
+      toast.add({
+        title: "Upload failed",
+        description: error instanceof Error ? error.message : undefined,
+        type: "error",
+      });
+    } finally {
+      window.removeEventListener("beforeunload", warnOnLeave);
+      setUploading(false);
+    }
   }
 
   return (
@@ -92,7 +154,7 @@ export function ProductAccessRow({
             onClick={() => fileInputRef.current?.click()}
           >
             <Upload className="size-3.5" />
-            {uploading ? "Uploading…" : "Upload PDF/ZIP"}
+            {uploading ? `Uploading… ${progress}%` : "Upload PDF/ZIP (max 500MB)"}
           </Button>
           <input
             ref={fileInputRef}

@@ -56,7 +56,7 @@ export default function PrivacyPolicyPage() {
       <LegalSection title="3. Data Storage & Security">
         <p>
           Your data is stored on Neon (a managed PostgreSQL provider) with encryption in
-          transit and at rest. Digital product files are stored on Cloudflare R2 and made
+          transit and at rest. Digital product files are stored on Neon Object Storage and made
           available only through time-limited, signed download links generated at the moment
           you access them. We use industry-standard measures — hashed passwords, HTTPS, and
           access controls — to protect your data, but no system is 100% secure, and we cannot
@@ -69,8 +69,7 @@ export default function PrivacyPolicyPage() {
         <LegalList
           items={[
             "Razorpay — payment processing. See razorpay.com/privacy for their policy.",
-            "Cloudflare R2 — secure file storage and delivery of purchased guides.",
-            "Neon (Postgres) — database hosting for accounts and orders.",
+            "Neon — database hosting for accounts and orders, and secure file storage and delivery of purchased guides.",
           ]}
         />
         <p>We do not sell your personal information to third parties for marketing purposes.</p>

@@ -26,13 +26,17 @@ export async function validateCoupon({
   }
 
   if (coupon.usageLimit != null || coupon.perCustomerLimit != null) {
+    // Only PAID orders count as a use — otherwise an abandoned or failed
+    // payment would burn the coupon and block the customer's retry.
     const [totalUses, customerUses] = await Promise.all([
       coupon.usageLimit != null
-        ? db.orm.public.Order.where({ couponCode: coupon.code }).aggregate((a) => ({ count: a.count() }))
+        ? db.orm.public.Order
+            .where({ couponCode: coupon.code, status: "PAID" })
+            .aggregate((a) => ({ count: a.count() }))
         : null,
       coupon.perCustomerLimit != null
         ? db.orm.public.Order
-            .where({ couponCode: coupon.code })
+            .where({ couponCode: coupon.code, status: "PAID" })
             .where({ userId })
             .aggregate((a) => ({ count: a.count() }))
         : null,

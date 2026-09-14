@@ -26,7 +26,7 @@ async function seedAdmin() {
 }
 
 // Real catalog copy. Edit digitalAccessUrl / upload the real file from the
-// admin Products page once the actual PDFs exist in R2.
+// admin Products page (stored in Neon Object Storage) once the real PDFs exist.
 type SeedProduct = {
   name: string;
   slug: string;

@@ -1,8 +1,12 @@
 import { betterAuth } from "better-auth";
 import { nextCookies } from "better-auth/next-js";
+import { oneTap } from "better-auth/plugins";
 import { Pool } from "pg";
 
 export const authPool = new Pool({ connectionString: process.env.DATABASE_URL });
+
+const googleClientId = process.env.GOOGLE_CLIENT_ID;
+const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
 
 const productionHost = process.env.BETTER_AUTH_URL ?? process.env.NEXT_PUBLIC_SITE_URL;
 
@@ -45,8 +49,21 @@ export const auth = betterAuth({
       "/sign-up/email": { window: 60, max: 5 },
     },
   },
-  // Google / OTP / 2FA (context doc §15) are follow-ups once the
-  // corresponding provider credentials exist — add socialProviders.google
-  // and the emailOtp / twoFactor plugins then.
-  plugins: [nextCookies()],
+  // Google (redirect button + One Tap prompt) switches on only once its
+  // credentials exist, so environments without them still boot. Google
+  // returns verified emails, so a Google sign-in links to an existing
+  // email/password account with the same address instead of duplicating it.
+  socialProviders:
+    googleClientId && googleClientSecret
+      ? {
+          google: {
+            clientId: googleClientId,
+            clientSecret: googleClientSecret,
+            prompt: "select_account",
+          },
+        }
+      : {},
+  // OTP / 2FA (context doc §15) are follow-ups — add the emailOtp /
+  // twoFactor plugins once needed. nextCookies must stay last.
+  plugins: [...(googleClientId ? [oneTap()] : []), nextCookies()],
 });
