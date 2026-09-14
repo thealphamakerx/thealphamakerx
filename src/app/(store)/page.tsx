@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 
 export default function HomePage() {
   return (
-    <main className="flex flex-1 flex-col">
+    <main className="storefront-home flex flex-1 flex-col">
       <Hero />
       <TrustBar />
       <FeaturedProducts />

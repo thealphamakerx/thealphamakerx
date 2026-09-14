@@ -24,25 +24,25 @@ const TESTIMONIALS = [
 
 export function Testimonials() {
   return (
-    <section className="mx-auto max-w-(--breakpoint-xl) px-6 py-16 md:px-16">
+    <section className="w-full mx-auto max-w-(--breakpoint-xl) px-6 py-24 md:px-16">
       <div className="mb-10 flex flex-col items-center gap-2 text-center">
         <span className="text-sm font-medium tracking-wide text-primary uppercase">
           Real Results
         </span>
-        <h2 className="text-2xl font-semibold tracking-tight md:text-3xl">
+        <h2 className="text-2xl font-semibold tracking-tight md:text-4xl">
           What Members Are Saying
         </h2>
       </div>
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
         {TESTIMONIALS.map((t) => (
-          <Card key={t.name}>
+          <Card key={t.name} className="border-border bg-white shadow-none transition-shadow hover:shadow-lg">
             <CardContent className="flex flex-col gap-4">
               <div className="flex gap-0.5 text-primary">
                 {Array.from({ length: 5 }).map((_, i) => (
                   <Star key={i} className="size-4 fill-current" />
                 ))}
               </div>
-              <p className="text-sm text-muted-foreground">&ldquo;{t.quote}&rdquo;</p>
+              <p className="text-base leading-relaxed text-muted-foreground">&ldquo;{t.quote}&rdquo;</p>
               <div className="text-sm font-medium">
                 {t.name} <span className="font-normal text-muted-foreground">· {t.location}</span>
               </div>

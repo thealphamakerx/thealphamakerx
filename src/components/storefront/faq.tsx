@@ -37,10 +37,10 @@ const FAQS = [
 export function Faq() {
   return (
     <section className="border-t border-border bg-secondary/30">
-      <div className="mx-auto max-w-(--breakpoint-md) px-6 py-16 md:px-16">
+      <div className="mx-auto max-w-(--breakpoint-md) px-6 py-24 md:px-16">
         <div className="mb-10 flex flex-col items-center gap-2 text-center">
           <span className="text-sm font-medium tracking-wide text-primary uppercase">FAQ</span>
-          <h2 className="text-2xl font-semibold tracking-tight md:text-3xl">
+          <h2 className="text-2xl font-semibold tracking-tight md:text-4xl">
             Common Questions
           </h2>
         </div>
@@ -49,7 +49,7 @@ export function Faq() {
             <AccordionItem key={faq.question} value={i}>
               <AccordionTrigger>{faq.question}</AccordionTrigger>
               <AccordionContent>
-                <p className="pb-3 text-sm text-muted-foreground">{faq.answer}</p>
+                <p className="pb-3 text-base leading-relaxed text-muted-foreground">{faq.answer}</p>
               </AccordionContent>
             </AccordionItem>
           ))}

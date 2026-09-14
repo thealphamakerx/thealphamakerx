@@ -1,18 +1,15 @@
-import Image from "next/image";
+import { Quote, ArrowUpRight } from "lucide-react";
+import Link from "next/link";
 import { siteConfig } from "@/config/site";
 
 export function Founder() {
   return (
     <section className="border-t border-border bg-secondary/30">
-      <div className="mx-auto grid max-w-(--breakpoint-xl) grid-cols-1 items-center gap-10 px-6 py-16 md:grid-cols-[280px_1fr] md:px-16">
-        <div className="mx-auto size-48 overflow-hidden rounded-full border border-border bg-secondary md:mx-0 md:size-64">
-          <Image
-            src="https://picsum.photos/seed/thealphamakerx-coach/600/600"
-            alt="Founder of The Alpha Maker X"
-            width={600}
-            height={600}
-            className="size-full object-cover"
-          />
+      <div className="mx-auto grid max-w-(--breakpoint-xl) grid-cols-1 items-center gap-16 px-6 py-24 md:grid-cols-[.8fr_1.2fr] md:px-16">
+        <div className="relative flex min-h-80 flex-col justify-between rounded-2xl bg-[#e5ead9] p-8 text-[#35482c]">
+          <Quote className="size-9" />
+          <p className="my-8 font-heading text-3xl font-medium leading-tight tracking-tight">Confidence is a skill.<br />You can build it.</p>
+          <span className="text-xs tracking-widest uppercase">The Alpha Maker X</span>
         </div>
         <div className="flex flex-col gap-4 text-center md:text-left">
           <span className="text-sm font-medium tracking-wide text-primary uppercase">
@@ -33,6 +30,7 @@ export function Founder() {
             built from real coaching sessions with hundreds of men across Kerala and beyond.
             No hype, no guesswork. Just what actually works.
           </p>
+          <Link href="/about" className="alpha-text-link mt-2 justify-center md:justify-start">More about the mission <ArrowUpRight size={18} /></Link>
         </div>
       </div>
     </section>

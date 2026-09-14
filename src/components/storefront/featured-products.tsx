@@ -1,3 +1,5 @@
+import Link from "next/link";
+import { ArrowUpRight } from "lucide-react";
 import { ProductCard } from "@/components/product/product-card";
 import { getAllProducts } from "@/lib/products";
 
@@ -7,8 +9,8 @@ export async function FeaturedProducts() {
   if (products.length === 0) return null;
 
   return (
-    <section className="mx-auto max-w-(--breakpoint-xl) px-6 py-16 md:px-16">
-      <h2 className="mb-8 text-2xl font-semibold">All Products</h2>
+    <section id="guides" className="store-section mx-auto max-w-(--breakpoint-xl) px-6 py-20 md:px-16 md:py-24">
+      <div className="mb-10 flex flex-wrap items-end justify-between gap-6"><div><span className="eyebrow mb-4">THE GROWTH COLLECTION</span><h2 className="section-heading">Your next step starts here.</h2><p className="mt-4 text-muted-foreground">Pick a guide. Put it into practice. Make it yours.</p></div><Link href="/shop" className="alpha-text-link">Explore all guides <ArrowUpRight size={18} /></Link></div>
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {products.map((product) => (
           <ProductCard

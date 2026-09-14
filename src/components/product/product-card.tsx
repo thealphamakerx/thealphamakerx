@@ -25,7 +25,7 @@ export function ProductCard({
   reviewCount?: number;
 }) {
   return (
-    <div className="flex flex-col gap-4 rounded-2xl border border-border p-4">
+    <div className="product-card flex flex-col gap-4 rounded-2xl border border-border p-5">
       <Link href={`/products/${slug}`} className="group flex flex-col gap-3">
         <div className="relative aspect-4/5 w-full overflow-hidden rounded-2xl bg-muted">
           {imageUrl ? (
@@ -33,8 +33,8 @@ export function ProductCard({
               src={imageUrl}
               alt={name}
               fill
-              className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
-              sizes="(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
+              className="object-cover transition-transform duration-700 group-hover:scale-[1.03]"
+              sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
             />
           ) : (
             <div className="flex h-full w-full items-center justify-center text-xs text-muted-foreground">
@@ -49,7 +49,7 @@ export function ProductCard({
               {badge}
             </Badge>
           )}
-          <span className="text-base font-semibold">{name}</span>
+          <span className="text-lg font-semibold">{name}</span>
           {description && (
             <p className="line-clamp-2 text-sm text-muted-foreground">{description}</p>
           )}
@@ -63,7 +63,7 @@ export function ProductCard({
       </Link>
 
       <Link href={`/products/${slug}`} className={buttonVariants({ size: "lg" })}>
-        Buy Now
+        Explore Guide
       </Link>
     </div>
   );
