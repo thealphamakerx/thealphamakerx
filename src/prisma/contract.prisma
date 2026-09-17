@@ -86,16 +86,29 @@ model Verification {
   @@control(external)
 }
 
-// Digital info-products: no shipping, no physical variants, no stock.
-// A product is bought once and unlocks `digitalAccessUrl` for the buyer.
+// Digital products (Excel/Google Sheets trackers): no shipping, no physical
+// variants, no stock. A product is bought once and unlocks `digitalAccessUrl`
+// (or the uploaded `digitalFileKey`) for the buyer.
 
 model Product {
   id               String  @id @default(uuid())
   name             String
+  // Compact label for cards, carts and order rows where the full name is too long.
+  shortName        String?
   slug             String  @unique
   description      String?
+  // Both in paise. `originalPrice` is the strike-through "was" price and is
+  // only rendered when it's greater than `price`.
   price            Int
+  originalPrice    Int?
   badge            String?
+  // Presentation hints mirrored from the catalog source: `iconName` is a
+  // lucide-react export name, `color` a key in PRODUCT_ACCENTS (lib/product-accent).
+  iconName         String?
+  color            String?
+  // Retired products stay in the table so past buyers keep their download
+  // access; only active ones are listed on the storefront.
+  isActive         Boolean @default(true)
   // External link fallback (Drive/Dropbox/etc) — used if digitalFileKey isn't set.
   digitalAccessUrl String?
   // Cloudflare R2 object key for an uploaded PDF/ZIP. When set, the access
@@ -112,6 +125,20 @@ model Product {
 
   createdAt TimestamptzString @default(now())
   updatedAt temporal.updatedAtString()
+}
+
+// Ordered selling-point bullets shown on the product page. A join model
+// rather than a `String[]` column: the SQL interpreter rejects scalar lists.
+
+model ProductFeature {
+  id        String @id @default(uuid())
+  productId String
+  label     String
+  position  Int    @default(0)
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
 }
 
 model ProductImage {

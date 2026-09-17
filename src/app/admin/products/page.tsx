@@ -5,7 +5,8 @@ import { Card, CardContent } from "@/components/ui/card";
 export const dynamic = "force-dynamic";
 
 export default async function AdminProductsPage() {
-  const { products } = await getAllProducts(1);
+  // Retired products are listed too — their files must stay reachable for past buyers.
+  const { products } = await getAllProducts(1, { includeInactive: true });
 
   return (
     <div className="flex flex-col gap-6">
@@ -26,6 +27,7 @@ export default async function AdminProductsPage() {
               slug={product.slug}
               name={product.name}
               price={product.price}
+              isActive={product.isActive}
               digitalAccessUrl={product.digitalAccessUrl}
               digitalFileName={product.digitalFileName}
             />

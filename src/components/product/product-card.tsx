@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { formatPrice } from "@/lib/pricing";
+import { discountPercent, formatPrice } from "@/lib/pricing";
 import { StarRating } from "@/components/shared/star-rating";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
@@ -10,6 +10,7 @@ export function ProductCard({
   name,
   description,
   price,
+  originalPrice,
   badge,
   imageUrl,
   rating,
@@ -19,11 +20,14 @@ export function ProductCard({
   name: string;
   description?: string | null;
   price: number;
+  originalPrice?: number | null;
   badge?: string | null;
   imageUrl?: string | null;
   rating?: number;
   reviewCount?: number;
 }) {
+  const percentOff = discountPercent(price, originalPrice);
+
   return (
     <div className="product-card flex flex-col gap-4 rounded-2xl border border-border p-5">
       <Link href={`/products/${slug}`} className="group flex flex-col gap-3">
@@ -59,11 +63,21 @@ export function ProductCard({
           <StarRating rating={rating} count={reviewCount} />
         )}
 
-        <span className="text-lg font-semibold">{formatPrice(price)}</span>
+        <div className="flex flex-wrap items-baseline gap-2">
+          <span className="text-lg font-semibold">{formatPrice(price)}</span>
+          {percentOff !== null && (
+            <>
+              <span className="text-sm text-muted-foreground line-through">
+                {formatPrice(originalPrice!)}
+              </span>
+              <Badge className="text-[11px]">{percentOff}% OFF</Badge>
+            </>
+          )}
+        </div>
       </Link>
 
       <Link href={`/products/${slug}`} className={buttonVariants({ size: "lg" })}>
-        Explore Guide
+        View Details
       </Link>
     </div>
   );

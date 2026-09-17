@@ -29,7 +29,10 @@ export async function POST(request: NextRequest) {
   }
   const extension = typeof contentType === "string" ? UPLOAD_CONTENT_TYPES[contentType] : undefined;
   if (!extension) {
-    return NextResponse.json({ error: "Only PDF and ZIP files are allowed" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Only Excel (.xlsx/.xls/.xlsm), CSV, PDF and ZIP files are allowed" },
+      { status: 400 }
+    );
   }
   if (typeof size !== "number" || size <= 0) {
     return NextResponse.json({ error: "Missing file size" }, { status: 400 });

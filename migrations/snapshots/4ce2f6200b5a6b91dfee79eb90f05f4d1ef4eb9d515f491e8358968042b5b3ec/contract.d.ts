@@ -33,7 +33,7 @@ import type {
 } from '@prisma/orm-postgres/contract/types';
 
 export type StorageHash =
-  StorageHashBase<'6c21f398590011a22b701b4f0a16097ee220adba2e7ae0120a7485952766b72c'>;
+  StorageHashBase<'4ce2f6200b5a6b91dfee79eb90f05f4d1ef4eb9d515f491e8358968042b5b3ec'>;
 export type ExecutionHash =
   ExecutionHashBase<'8758499b0571b8183f5ec0d4eba12b627eabf2b6854b2b2a004e34d6cc3bb90b'>;
 export type ProfileHash =
@@ -315,7 +315,6 @@ export type FieldOutputTypes = {
       readonly badge: CodecTypes['pg/text@1']['output'] | null;
       readonly iconName: CodecTypes['pg/text@1']['output'] | null;
       readonly color: CodecTypes['pg/text@1']['output'] | null;
-      readonly isActive: CodecTypes['pg/bool@1']['output'];
       readonly digitalAccessUrl: CodecTypes['pg/text@1']['output'] | null;
       readonly digitalFileKey: CodecTypes['pg/text@1']['output'] | null;
       readonly digitalFileName: CodecTypes['pg/text@1']['output'] | null;
@@ -458,7 +457,6 @@ export type FieldInputTypes = {
       readonly badge: CodecTypes['pg/text@1']['input'] | null;
       readonly iconName: CodecTypes['pg/text@1']['input'] | null;
       readonly color: CodecTypes['pg/text@1']['input'] | null;
-      readonly isActive: CodecTypes['pg/bool@1']['input'];
       readonly digitalAccessUrl: CodecTypes['pg/text@1']['input'] | null;
       readonly digitalFileKey: CodecTypes['pg/text@1']['input'] | null;
       readonly digitalFileName: CodecTypes['pg/text@1']['input'] | null;
@@ -600,7 +598,6 @@ export type StorageColumnTypes = {
       readonly digitalFileName: CodecTypes['pg/text@1']['output'] | null;
       readonly iconName: CodecTypes['pg/text@1']['output'] | null;
       readonly id: CodecTypes['pg/text@1']['output'];
-      readonly isActive: CodecTypes['pg/bool@1']['output'];
       readonly name: CodecTypes['pg/text@1']['output'];
       readonly originalPrice: CodecTypes['pg/int4@1']['output'] | null;
       readonly price: CodecTypes['pg/int4@1']['output'];
@@ -743,7 +740,6 @@ export type StorageColumnInputTypes = {
       readonly digitalFileName: CodecTypes['pg/text@1']['input'] | null;
       readonly iconName: CodecTypes['pg/text@1']['input'] | null;
       readonly id: CodecTypes['pg/text@1']['input'];
-      readonly isActive: CodecTypes['pg/bool@1']['input'];
       readonly name: CodecTypes['pg/text@1']['input'];
       readonly originalPrice: CodecTypes['pg/int4@1']['input'] | null;
       readonly price: CodecTypes['pg/int4@1']['input'];
@@ -1251,15 +1247,6 @@ type ContractBase = Omit<
                   readonly nativeType: 'text';
                   readonly codecId: 'pg/text@1';
                   readonly nullable: true;
-                };
-                readonly isActive: {
-                  readonly nativeType: 'bool';
-                  readonly codecId: 'pg/bool@1';
-                  readonly nullable: false;
-                  readonly default: {
-                    readonly kind: 'literal';
-                    readonly value: DefaultLiteralValue<'pg/bool@1', true>;
-                  };
                 };
                 readonly digitalAccessUrl: {
                   readonly nativeType: 'text';
@@ -2141,10 +2128,6 @@ type ContractBase = Omit<
                 readonly nullable: true;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
               };
-              readonly isActive: {
-                readonly nullable: false;
-                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/bool@1' };
-              };
               readonly digitalAccessUrl: {
                 readonly nullable: true;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
@@ -2195,7 +2178,6 @@ type ContractBase = Omit<
                 readonly badge: { readonly column: 'badge' };
                 readonly iconName: { readonly column: 'iconName' };
                 readonly color: { readonly column: 'color' };
-                readonly isActive: { readonly column: 'isActive' };
                 readonly digitalAccessUrl: { readonly column: 'digitalAccessUrl' };
                 readonly digitalFileKey: { readonly column: 'digitalFileKey' };
                 readonly digitalFileName: { readonly column: 'digitalFileName' };

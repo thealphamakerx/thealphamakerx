@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Mail, Phone, MapPin, AtSign, Video } from "lucide-react";
+import { Mail, Phone, MessageCircle, MapPin, AtSign, Video } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { siteConfig } from "@/config/site";
 
@@ -17,9 +17,16 @@ const CONTACT_ITEMS = [
   },
   {
     icon: Phone,
-    label: "Phone / WhatsApp",
+    label: "Phone",
     value: siteConfig.contactPhone,
     href: `tel:${siteConfig.contactPhone.replace(/\s/g, "")}`,
+  },
+  {
+    icon: MessageCircle,
+    label: "WhatsApp",
+    value: siteConfig.contactPhone,
+    href: siteConfig.whatsappUrl,
+    external: true,
   },
   {
     icon: MapPin,
@@ -38,14 +45,14 @@ export default function ContactPage() {
         </span>
         <h1 className="mt-3 text-3xl font-semibold tracking-tight md:text-4xl">Contact Us</h1>
         <p className="mt-4 text-base text-muted-foreground">
-          Questions about an order, a refund, or a guide before you buy? We usually reply
+          Questions about an order, a refund, or a tracker before you buy? We usually reply
           within 24 hours.
         </p>
       </section>
 
       <section className="mx-auto max-w-(--breakpoint-sm) px-6 pb-16 md:px-16">
         <div className="flex flex-col gap-4">
-          {CONTACT_ITEMS.map(({ icon: Icon, label, value, href }) => (
+          {CONTACT_ITEMS.map(({ icon: Icon, label, value, href, external }) => (
             <Card key={label}>
               <CardContent className="flex items-center gap-4">
                 <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
@@ -54,7 +61,11 @@ export default function ContactPage() {
                 <div className="flex flex-col">
                   <span className="text-xs text-muted-foreground">{label}</span>
                   {href ? (
-                    <a href={href} className="text-sm font-medium hover:underline">
+                    <a
+                      href={href}
+                      className="text-sm font-medium hover:underline"
+                      {...(external ? { target: "_blank", rel: "noreferrer" } : {})}
+                    >
                       {value}
                     </a>
                   ) : (

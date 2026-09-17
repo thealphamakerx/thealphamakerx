@@ -1,0 +1,290 @@
+[
+  {
+    "id": "table.productFeature",
+    "label": "Create table \"productFeature\"",
+    "summary": "Creates table \"productFeature\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "productFeature"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"productFeature\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"productFeature\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"productFeature\"",
+        "sql": "CREATE TABLE \"public\".\"productFeature\" (\n  \"id\" text NOT NULL,\n  \"label\" text NOT NULL,\n  \"position\" int4 DEFAULT 0 NOT NULL,\n  \"productId\" text NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"productFeature\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"productFeature\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.product.color",
+    "label": "Add column \"color\" to \"product\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "color",
+        "table": "product"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"color\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "product",
+          "color"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"color\"",
+        "sql": "ALTER TABLE \"public\".\"product\" ADD COLUMN \"color\" text"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"color\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "product",
+          "color"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.product.iconName",
+    "label": "Add column \"iconName\" to \"product\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "iconName",
+        "table": "product"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"iconName\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "product",
+          "iconName"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"iconName\"",
+        "sql": "ALTER TABLE \"public\".\"product\" ADD COLUMN \"iconName\" text"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"iconName\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "product",
+          "iconName"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.product.originalPrice",
+    "label": "Add column \"originalPrice\" to \"product\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "originalPrice",
+        "table": "product"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"originalPrice\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "product",
+          "originalPrice"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"originalPrice\"",
+        "sql": "ALTER TABLE \"public\".\"product\" ADD COLUMN \"originalPrice\" int4"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"originalPrice\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "product",
+          "originalPrice"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.product.shortName",
+    "label": "Add column \"shortName\" to \"product\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "shortName",
+        "table": "product"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"shortName\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "product",
+          "shortName"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"shortName\"",
+        "sql": "ALTER TABLE \"public\".\"product\" ADD COLUMN \"shortName\" text"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"shortName\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "product",
+          "shortName"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.productFeature.productFeature_productId_idx_5858600a",
+    "label": "Create index \"productFeature_productId_idx_5858600a\" on \"productFeature\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "productFeature_productId_idx_5858600a",
+        "table": "productFeature"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"productFeature_productId_idx_5858600a\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"productFeature_productId_idx_5858600a\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"productFeature_productId_idx_5858600a\"",
+        "sql": "CREATE INDEX \"productFeature_productId_idx_5858600a\" ON \"public\".\"productFeature\" (\"productId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"productFeature_productId_idx_5858600a\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"productFeature_productId_idx_5858600a\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.productFeature.productFeature_productId_fkey",
+    "label": "Add foreign key \"productFeature_productId_fkey\" on \"productFeature\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "productFeature_productId_fkey",
+        "table": "productFeature"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"productFeature_productId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "productFeature_productId_fkey",
+          "public",
+          "\"public\".\"productFeature\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"productFeature_productId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"productFeature\"\nADD CONSTRAINT \"productFeature_productId_fkey\"\nFOREIGN KEY (\"productId\")\nREFERENCES \"public\".\"product\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"productFeature_productId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "productFeature_productId_fkey",
+          "public",
+          "\"public\".\"productFeature\""
+        ]
+      }
+    ]
+  }
+]

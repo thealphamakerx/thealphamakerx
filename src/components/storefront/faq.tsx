@@ -8,14 +8,19 @@ import { siteConfig } from "@/config/site";
 
 const FAQS = [
   {
-    question: "How do I get the guide after I pay?",
+    question: "How do I get the tracker after I pay?",
     answer:
       "Access is instant. As soon as your payment is confirmed by Razorpay, a download link unlocks on your order confirmation page and in your account under My Orders — no waiting, no shipping.",
   },
   {
-    question: "What format are the guides in?",
+    question: "What format are the trackers in?",
     answer:
-      "Every guide is a downloadable PDF (some come with bonus worksheets as a ZIP). You can read it on your phone, tablet, or laptop, and keep it permanently once purchased.",
+      "Every tracker is a downloadable Excel spreadsheet (.xlsx). It opens in Microsoft Excel, Google Sheets, Numbers, or any other spreadsheet app — on your phone, tablet, or laptop — and it's yours permanently once purchased.",
+  },
+  {
+    question: "Do I need to know Excel to use them?",
+    answer:
+      "No. Every sheet is set up for you — you type your numbers into the coloured input cells and the charts, totals, and dashboards update themselves. All the formulas are already built in.",
   },
   {
     question: "Is payment safe?",

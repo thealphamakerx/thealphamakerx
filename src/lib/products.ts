@@ -23,6 +23,7 @@ async function withCardData(products: Awaited<ReturnType<typeof db.orm.public.Pr
 
 export async function getFeaturedProducts(limit = 4) {
   const products = await db.orm.public.Product
+    .where({ isActive: true })
     .orderBy((p) => p.createdAt.desc())
     .limit(limit)
     .all();
@@ -32,14 +33,22 @@ export async function getFeaturedProducts(limit = 4) {
 
 const PAGE_SIZE = 24;
 
-export async function getAllProducts(page = 1) {
+/**
+ * `includeInactive` is for the admin list only — retired products stay in the
+ * table so past buyers keep their download access, but they're never listed
+ * on the storefront.
+ */
+export async function getAllProducts(page = 1, { includeInactive = false } = {}) {
+  const filter = includeInactive ? {} : { isActive: true };
+
   const [products, { count }] = await Promise.all([
     db.orm.public.Product
+      .where(filter)
       .orderBy((p) => p.createdAt.desc())
       .limit(PAGE_SIZE)
       .offset((page - 1) * PAGE_SIZE)
       .all(),
-    db.orm.public.Product.aggregate((aggregate) => ({ count: aggregate.count() })),
+    db.orm.public.Product.where(filter).aggregate((aggregate) => ({ count: aggregate.count() })),
   ]);
 
   return {
@@ -54,8 +63,12 @@ export const getProductBySlug = cache(async (slug: string) => {
   const product = await db.orm.public.Product.first({ slug });
   if (!product) return null;
 
-  const [images, ratingSummary] = await Promise.all([
+  const [images, features, ratingSummary] = await Promise.all([
     db.orm.public.ProductImage.where({ productId: product.id }).all(),
+    db.orm.public.ProductFeature
+      .where({ productId: product.id })
+      .orderBy((f) => f.position.asc())
+      .all(),
     db.orm.public.Review
       .where({ productId: product.id, status: "APPROVED" })
       .aggregate((aggregate) => ({
@@ -69,5 +82,5 @@ export const getProductBySlug = cache(async (slug: string) => {
     count: product.reviewCountOverride ?? ratingSummary.count,
   };
 
-  return { product, images, ratingSummary: rating };
+  return { product, images, features, ratingSummary: rating };
 });

@@ -35,6 +35,7 @@ export default async function ShopPage({ searchParams }: PageProps<"/shop">) {
                 name={product.name}
                 description={product.description}
                 price={product.price}
+                originalPrice={product.originalPrice}
                 badge={product.badge}
                 imageUrl={product.imageUrl}
                 rating={product.rating}

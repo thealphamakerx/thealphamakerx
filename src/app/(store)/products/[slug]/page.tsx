@@ -12,6 +12,7 @@ import { ReviewForm } from "@/components/product/review-form";
 import { WishlistButton } from "@/components/product/wishlist-button";
 import { StarRating } from "@/components/shared/star-rating";
 import { Badge } from "@/components/ui/badge";
+import { Check } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -44,7 +45,7 @@ export default async function ProductPage({
 
   if (!result) notFound();
 
-  const { product, images, ratingSummary } = result;
+  const { product, images, features, ratingSummary } = result;
 
   const session = await auth.api.getSession({ headers: await headers() });
   const [reviews, eligibleOrderId, wishlistEntry] = await Promise.all([
@@ -115,7 +116,25 @@ export default async function ProductPage({
             </p>
           )}
 
-          <PurchasePanel productId={product.id} price={product.price} />
+          {features.length > 0 && (
+            <div className="flex flex-col gap-2 rounded-2xl border border-border p-5">
+              <span className="text-sm font-semibold">What&apos;s inside</span>
+              <ul className="flex flex-col gap-2">
+                {features.map((feature) => (
+                  <li key={feature.id} className="flex items-start gap-2 text-sm">
+                    <Check size={16} className="mt-0.5 shrink-0 text-primary" aria-hidden="true" />
+                    <span>{feature.label}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          <PurchasePanel
+            productId={product.id}
+            price={product.price}
+            originalPrice={product.originalPrice}
+          />
         </div>
       </div>
 

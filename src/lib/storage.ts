@@ -10,6 +10,10 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 export const MAX_UPLOAD_BYTES = 500 * 1024 * 1024; // 500MB
 
 export const UPLOAD_CONTENT_TYPES: Record<string, string> = {
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": "xlsx",
+  "application/vnd.ms-excel": "xls",
+  "application/vnd.ms-excel.sheet.macroEnabled.12": "xlsm",
+  "text/csv": "csv",
   "application/pdf": "pdf",
   "application/zip": "zip",
   "application/x-zip-compressed": "zip",

@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
+import { siteConfig } from "@/config/site";
 
 export function LegalPageShell({
   title,
@@ -51,5 +52,42 @@ export function LegalList({ items }: { items: string[] }) {
         <li key={item}>{item}</li>
       ))}
     </ul>
+  );
+}
+
+/**
+ * Seller identity block. The Consumer Protection (E-Commerce) Rules, 2020 and
+ * Razorpay's merchant terms both require the legal name, address and working
+ * contact details of the seller to be published, so every policy page carries
+ * this same block rather than burying the details on /contact.
+ */
+export function SellerIdentity() {
+  return (
+    <section className="flex flex-col gap-2 rounded-2xl border border-border bg-secondary/40 p-5 text-sm">
+      <span className="font-semibold text-foreground">{siteConfig.legalName}</span>
+      <address className="not-italic">
+        {siteConfig.addressLines.map((line) => (
+          <span key={line} className="block">
+            {line}
+          </span>
+        ))}
+      </address>
+      <span>
+        Email:{" "}
+        <a href={`mailto:${siteConfig.contactEmail}`} className="text-foreground hover:underline">
+          {siteConfig.contactEmail}
+        </a>
+      </span>
+      <span>
+        Phone:{" "}
+        <a
+          href={`tel:${siteConfig.contactPhone.replace(/\s/g, "")}`}
+          className="text-foreground hover:underline"
+        >
+          {siteConfig.contactPhone}
+        </a>
+      </span>
+      {siteConfig.gstin && <span>GSTIN: {siteConfig.gstin}</span>}
+    </section>
   );
 }

@@ -39,6 +39,7 @@ export default async function AccountWishlistPage() {
               slug={product.slug}
               name={product.name}
               price={product.price}
+              originalPrice={product.originalPrice}
             />
           ))}
         </div>

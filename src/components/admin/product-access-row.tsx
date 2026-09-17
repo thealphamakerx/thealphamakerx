@@ -44,6 +44,7 @@ export function ProductAccessRow({
   slug,
   name,
   price,
+  isActive,
   digitalAccessUrl,
   digitalFileName,
 }: {
@@ -51,6 +52,7 @@ export function ProductAccessRow({
   slug: string;
   name: string;
   price: number;
+  isActive: boolean;
   digitalAccessUrl: string | null;
   digitalFileName: string | null;
 }) {
@@ -82,10 +84,17 @@ export function ProductAccessRow({
     if (fileInputRef.current) fileInputRef.current.value = "";
     if (!file) return;
 
-    // Some OSes report no MIME type for .zip — fall back to the extension.
-    const contentType =
-      file.type ||
-      (/\.pdf$/i.test(file.name) ? "application/pdf" : /\.zip$/i.test(file.name) ? "application/zip" : "");
+    // Some OSes report no MIME type for .zip/.xlsx — fall back to the extension.
+    const EXTENSION_TYPES: Record<string, string> = {
+      xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      xlsm: "application/vnd.ms-excel.sheet.macroEnabled.12",
+      xls: "application/vnd.ms-excel",
+      csv: "text/csv",
+      pdf: "application/pdf",
+      zip: "application/zip",
+    };
+    const extension = file.name.split(".").pop()?.toLowerCase() ?? "";
+    const contentType = file.type || EXTENSION_TYPES[extension] || "";
 
     if (file.size > MAX_UPLOAD_BYTES) {
       toast.add({ title: "Upload failed", description: "File is too large (max 500MB)", type: "error" });
@@ -139,9 +148,12 @@ export function ProductAccessRow({
     <Card>
       <CardContent className="flex flex-col gap-3">
         <div className="flex items-center justify-between">
-          <Link href={`/products/${slug}`} target="_blank" className="font-medium hover:underline">
-            {name}
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link href={`/products/${slug}`} target="_blank" className="font-medium hover:underline">
+              {name}
+            </Link>
+            {!isActive && <Badge variant="secondary">Retired</Badge>}
+          </div>
           <span className="font-medium">{formatPrice(price)}</span>
         </div>
 
@@ -154,12 +166,12 @@ export function ProductAccessRow({
             onClick={() => fileInputRef.current?.click()}
           >
             <Upload className="size-3.5" />
-            {uploading ? `Uploading… ${progress}%` : "Upload PDF/ZIP (max 500MB)"}
+            {uploading ? `Uploading… ${progress}%` : "Upload .xlsx / .zip (max 500MB)"}
           </Button>
           <input
             ref={fileInputRef}
             type="file"
-            accept=".pdf,.zip,application/pdf,application/zip"
+            accept=".xlsx,.xlsm,.xls,.csv,.pdf,.zip"
             onChange={handleFileChange}
             disabled={uploading}
             className="hidden"
@@ -171,7 +183,7 @@ export function ProductAccessRow({
 
         <div className="flex gap-2">
           <Input
-            placeholder="Or paste an external link (Google Drive, Gumroad, etc.)"
+            placeholder="Or paste an external link (Google Sheets, Drive, Gumroad, etc.)"
             value={url}
             onChange={(e) => setUrl(e.target.value)}
             className="h-8 text-xs"
