@@ -1,0 +1,86 @@
+[
+  {
+    "id": "column.public.paymentRefund.paymentId",
+    "label": "Add column \"paymentId\" to \"paymentRefund\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "paymentId",
+        "table": "paymentRefund"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"paymentId\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "paymentRefund",
+          "paymentId"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"paymentId\"",
+        "sql": "ALTER TABLE \"public\".\"paymentRefund\" ADD COLUMN \"paymentId\" text"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"paymentId\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "paymentRefund",
+          "paymentId"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.paymentRefund.refundType",
+    "label": "Add column \"refundType\" to \"paymentRefund\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "refundType",
+        "table": "paymentRefund"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"refundType\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "paymentRefund",
+          "refundType"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"refundType\"",
+        "sql": "ALTER TABLE \"public\".\"paymentRefund\" ADD COLUMN \"refundType\" text DEFAULT 'MERCHANT_INITIATED' NOT NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"refundType\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "paymentRefund",
+          "refundType"
+        ]
+      }
+    ]
+  }
+]

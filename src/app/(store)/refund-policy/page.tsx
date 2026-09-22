@@ -33,7 +33,7 @@ export default function RefundPolicyPage() {
           an order that is never paid for simply lapses, and you do not need to do anything.
         </p>
         <p>
-          Once Razorpay confirms your payment and the order status becomes{" "}
+          Once Cashfree confirms your payment and the order status becomes{" "}
           <strong>Paid</strong>, your download unlocks immediately and the order can no longer
           be cancelled. From that point the refund rules in section 2 apply instead.
         </p>
@@ -46,7 +46,7 @@ export default function RefundPolicyPage() {
             "You were charged but your access never unlocked, because of a technical fault on our side",
             "The file you received is corrupt, will not open, is incomplete, or is not the product described on the page you bought from",
             "You were charged more than once for the same order, or charged more than the price shown at checkout",
-            "You were charged for an order you did not authorise, and this is confirmed with Razorpay",
+            "You were charged for an order you did not authorise, and this is confirmed with Cashfree",
             "We withdraw or cannot supply the product after you have paid for it",
           ]}
         />
@@ -87,7 +87,7 @@ export default function RefundPolicyPage() {
           certainly never captured. Your bank normally releases such an authorisation on its
           own within <strong>5 to 7 working days</strong>. If it has not reappeared after
           that, contact us with the date, amount and the last four digits of the card or the
-          UPI reference, and we will trace it with Razorpay. Genuine duplicate charges are
+          UPI reference, and we will trace it with Cashfree. Genuine duplicate charges are
           refunded in full as soon as we confirm them — you do not need to prove anything
           beyond the transaction details.
         </p>
@@ -117,7 +117,7 @@ export default function RefundPolicyPage() {
 
       <LegalSection title="6. How Refunds Are Paid">
         <p>
-          Approved refunds are always returned through Razorpay to the original payment method
+          Approved refunds are always returned through Cashfree to the original payment method
           — the same card, UPI ID or bank account you paid from. We cannot redirect a refund
           to a different account, and we do not refund in cash, credit or vouchers unless you
           ask for a credit and we agree to it.
@@ -135,7 +135,7 @@ export default function RefundPolicyPage() {
         <p>
           If something has gone wrong, please contact us first — we can almost always resolve
           it faster than a bank dispute. Raising a chargeback without contacting us may lead
-          to your access being suspended while the dispute is investigated with Razorpay. This
+          to your access being suspended while the dispute is investigated with Cashfree. This
           does not affect your right to dispute a genuinely fraudulent transaction with your
           bank.
         </p>

@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { GoogleSignIn } from "@/components/shared/google-sign-in";
 import { formatPrice } from "@/lib/pricing";
-import { siteConfig } from "@/config/site";
 
 type CartSummary = {
   lines: { productId: string; productName: string; lineTotal: number }[];
@@ -24,23 +23,26 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const { items, clearCart } = useCart();
+  const { items } = useCart();
   const { data: session, isPending: sessionPending } = useSession();
   const [summary, setSummary] = useState<CartSummary | null>(null);
   const [couponInput, setCouponInput] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState("");
   const [guestEmail, setGuestEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [scriptReady, setScriptReady] = useState(false);
   // The PENDING order from an earlier attempt, reused when the customer
   // retries with the same cart instead of piling up abandoned orders.
-  const [pendingOrder, setPendingOrder] = useState<{ id: string; key: string } | null>(null);
+  const [pendingOrder, setPendingOrder] = useState<{ id: string; key: string; token: string } | null>(null);
 
   const isGuest = !sessionPending && !session;
   const guestEmailValid = EMAIL_RE.test(guestEmail.trim());
   const checkoutKey = JSON.stringify({
     items,
+    phone,
+    userId: session?.user.id,
     coupon: appliedCoupon,
     email: isGuest ? guestEmail.trim().toLowerCase() : null,
   });
@@ -70,112 +72,56 @@ export default function CheckoutPage() {
     setSubmitting(false);
   }
 
-  function finish(orderId: string) {
-    clearCart();
-    router.push(`/checkout/confirmation?orderId=${orderId}`);
+  function finish(orderId: string, token: string) {
+    router.push(`/checkout/confirmation?orderId=${orderId}&token=${encodeURIComponent(token)}`);
   }
 
   async function handlePay() {
+    if (submitting || sessionPending) return;
     setSubmitError(null);
-
-    if (!scriptReady || !window.Razorpay) {
-      fail(
-        "The payment gateway hasn't loaded yet. Check your connection or disable any ad blocker, then try again."
-      );
+    if (!scriptReady || !window.Cashfree) {
+      fail("Cashfree checkout hasn’t loaded yet. Check your connection and try again.");
       return;
     }
-    const Razorpay = window.Razorpay;
-
     setSubmitting(true);
-
     try {
-      let orderId = pendingOrder?.key === checkoutKey ? pendingOrder.id : null;
-
-      if (!orderId) {
-        const checkoutRes = await fetch("/api/checkout", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            items,
-            couponCode: appliedCoupon || undefined,
-            email: isGuest ? guestEmail.trim() : undefined,
-          }),
+      let saved = pendingOrder?.key === checkoutKey ? pendingOrder : null;
+      if (!saved) {
+        try {
+          const stored = JSON.parse(sessionStorage.getItem("cashfree-checkout") || "null");
+          if (stored?.key === checkoutKey && stored.id && stored.token) saved = stored;
+        } catch { /* Storage may be unavailable. */ }
+      }
+      if (!saved) {
+        const response = await fetch("/api/checkout", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ items, phone, couponCode: appliedCoupon || undefined, email: isGuest ? guestEmail.trim() : undefined }),
         });
-        const checkoutData = await checkoutRes.json().catch(() => null);
-        if (!checkoutRes.ok || !checkoutData?.orderId) {
-          fail(checkoutData?.error ?? "Could not start checkout");
-          return;
-        }
-        orderId = checkoutData.orderId as string;
-        setPendingOrder({ id: orderId, key: checkoutKey });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || "Could not start checkout");
+        saved = { id: data.orderId, token: data.checkoutToken, key: checkoutKey };
+        setPendingOrder(saved);
+        try { sessionStorage.setItem("cashfree-checkout", JSON.stringify(saved)); } catch { /* Optional persistence. */ }
       }
-
-      const razorpayOrderRes = await fetch("/api/razorpay/create-order", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ orderId }),
+      const response = await fetch("/api/cashfree/create-order", {
+        method: "POST", headers: { "Content-Type": "application/json", "x-checkout-token": saved.token },
+        body: JSON.stringify({ orderId: saved.id }),
       });
-      const razorpayOrder = await razorpayOrderRes.json().catch(() => null);
-
-      if (!razorpayOrderRes.ok || !razorpayOrder) {
-        // The order was paid or cancelled in the meantime — start fresh next time.
-        if (razorpayOrderRes.status === 409 || razorpayOrderRes.status === 404) {
+      const data = await response.json();
+      if (!response.ok) {
+        if (response.status === 409 || response.status === 404) {
           setPendingOrder(null);
+          try { sessionStorage.removeItem("cashfree-checkout"); } catch { /* Optional persistence. */ }
         }
-        fail(razorpayOrder?.error ?? "Could not start payment, please try again");
-        return;
+        throw new Error(data.error || "Could not start payment");
       }
-
-      if (razorpayOrder.free) {
-        finish(orderId);
-        return;
-      }
-
-      const paidOrderId = orderId;
-      const checkout = new Razorpay({
-        key: razorpayOrder.keyId,
-        amount: razorpayOrder.amount,
-        currency: razorpayOrder.currency,
-        order_id: razorpayOrder.razorpayOrderId,
-        name: siteConfig.name,
-        description: `Order #${paidOrderId.slice(0, 8).toUpperCase()}`,
-        prefill: {
-          name: session?.user.name,
-          email: session?.user.email ?? guestEmail.trim(),
-        },
-        notes: { orderId: paidOrderId },
-        theme: { color: "#e4572e" },
-        handler: async (response) => {
-          // Money has moved at this point. Even if verification fails here
-          // (network blip), the webhook still confirms the order, and the
-          // confirmation page polls for that — so always go there.
-          await fetch("/api/razorpay/verify", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              razorpayOrderId: response.razorpay_order_id,
-              razorpayPaymentId: response.razorpay_payment_id,
-              razorpaySignature: response.razorpay_signature,
-            }),
-          }).catch(() => null);
-          finish(paidOrderId);
-        },
-        modal: {
-          ondismiss: () => setSubmitting(false),
-        },
-      });
-
-      // Razorpay keeps its modal open after a failed attempt so the customer
-      // can retry with another method; surface the reason on the page too.
-      checkout.on("payment.failed", (response) => {
-        setSubmitError(
-          `Payment failed: ${response.error.description || "please try another payment method"}`
-        );
-      });
-
-      checkout.open();
-    } catch {
-      fail("Network error — please check your connection and try again");
+      if (data.paid || data.checkStatus) { finish(saved.id, saved.token); return; }
+      const result = await window.Cashfree({ mode: data.mode }).checkout({ paymentSessionId: data.paymentSessionId, redirectTarget: "_self" });
+      if (result?.error) throw new Error(result.error.message || "Could not open checkout. Please retry.");
+      // Browser callbacks never mark an order paid. The confirmation page verifies server-side.
+      finish(saved.id, saved.token);
+    } catch (error) {
+      fail(error instanceof Error ? error.message : "Network error. Your cart is saved; please retry.");
     }
   }
 
@@ -190,9 +136,10 @@ export default function CheckoutPage() {
   return (
     <main className="mx-auto flex w-full max-w-(--breakpoint-sm) flex-1 flex-col gap-6 px-6 py-12">
       <Script
-        src="https://checkout.razorpay.com/v1/checkout.js"
+        src="https://sdk.cashfree.com/js/v3/cashfree.js"
         onReady={() => setScriptReady(true)}
         onLoad={() => setScriptReady(true)}
+        onError={() => fail("Cashfree could not load. Refresh the page and try again.")}
       />
 
       <h1 className="text-2xl font-semibold">Checkout</h1>
@@ -258,6 +205,13 @@ export default function CheckoutPage() {
         </div>
       )}
 
+      <div className="flex flex-col gap-2">
+        <label htmlFor="payment-phone" className="text-sm font-medium">Mobile number</label>
+        <Input id="payment-phone" type="tel" inputMode="numeric" autoComplete="tel-national" maxLength={10}
+          value={phone} onChange={(event) => setPhone(event.target.value.replace(/\D/g, ""))} placeholder="10-digit Indian mobile number" />
+        <p className="text-xs text-muted-foreground">Used by Cashfree to process your payment.</p>
+      </div>
+
       <div className="flex flex-col gap-3 rounded-2xl border border-border p-6">
         {summary ? (
           <>
@@ -319,7 +273,7 @@ export default function CheckoutPage() {
 
       <Button
         size="lg"
-        disabled={submitting || !summary || (isGuest && !guestEmailValid)}
+        disabled={submitting || sessionPending || !summary || !/^[6-9]\d{9}$/.test(phone) || (isGuest && !guestEmailValid)}
         onClick={handlePay}
       >
         {submitting ? "Processing…" : "Pay Securely"}

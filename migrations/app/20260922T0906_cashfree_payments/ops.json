@@ -1,0 +1,818 @@
+[
+  {
+    "id": "table.paymentAttempt",
+    "label": "Create table \"paymentAttempt\"",
+    "summary": "Creates table \"paymentAttempt\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "paymentAttempt"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"paymentAttempt\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"paymentAttempt\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"paymentAttempt\"",
+        "sql": "CREATE TABLE \"public\".\"paymentAttempt\" (\n  \"amount\" int4 NOT NULL,\n  \"currency\" text NOT NULL,\n  \"id\" text NOT NULL,\n  \"message\" text,\n  \"orderId\" text NOT NULL,\n  \"paymentTime\" timestamptz NOT NULL,\n  \"status\" text NOT NULL,\n  \"updatedAt\" timestamptz NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"paymentAttempt\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"paymentAttempt\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.paymentEmail",
+    "label": "Create table \"paymentEmail\"",
+    "summary": "Creates table \"paymentEmail\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "paymentEmail"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"paymentEmail\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"paymentEmail\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"paymentEmail\"",
+        "sql": "CREATE TABLE \"public\".\"paymentEmail\" (\n  \"attempts\" int4 DEFAULT 0 NOT NULL,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"id\" text NOT NULL,\n  \"kind\" text NOT NULL,\n  \"orderId\" text NOT NULL,\n  \"sentAt\" timestamptz,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"paymentEmail\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"paymentEmail\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.paymentEvent",
+    "label": "Create table \"paymentEvent\"",
+    "summary": "Creates table \"paymentEvent\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "paymentEvent"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"paymentEvent\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"paymentEvent\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"paymentEvent\"",
+        "sql": "CREATE TABLE \"public\".\"paymentEvent\" (\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"id\" text NOT NULL,\n  \"orderId\" text NOT NULL,\n  \"source\" text NOT NULL,\n  \"summary\" text NOT NULL,\n  \"type\" text NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"paymentEvent\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"paymentEvent\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.paymentRefund",
+    "label": "Create table \"paymentRefund\"",
+    "summary": "Creates table \"paymentRefund\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "paymentRefund"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"paymentRefund\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"paymentRefund\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"paymentRefund\"",
+        "sql": "CREATE TABLE \"public\".\"paymentRefund\" (\n  \"amount\" int4 NOT NULL,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"gatewayRefundId\" text,\n  \"id\" text NOT NULL,\n  \"message\" text,\n  \"orderId\" text NOT NULL,\n  \"status\" text NOT NULL,\n  \"updatedAt\" timestamptz NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"paymentRefund\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"paymentRefund\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.order.cashfreeOrderId",
+    "label": "Add column \"cashfreeOrderId\" to \"order\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "cashfreeOrderId",
+        "table": "order"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"cashfreeOrderId\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "order",
+          "cashfreeOrderId"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"cashfreeOrderId\"",
+        "sql": "ALTER TABLE \"public\".\"order\" ADD COLUMN \"cashfreeOrderId\" text"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"cashfreeOrderId\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "order",
+          "cashfreeOrderId"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.order.cashfreePaymentId",
+    "label": "Add column \"cashfreePaymentId\" to \"order\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "cashfreePaymentId",
+        "table": "order"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"cashfreePaymentId\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "order",
+          "cashfreePaymentId"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"cashfreePaymentId\"",
+        "sql": "ALTER TABLE \"public\".\"order\" ADD COLUMN \"cashfreePaymentId\" text"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"cashfreePaymentId\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "order",
+          "cashfreePaymentId"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.order.customerPhone",
+    "label": "Add column \"customerPhone\" to \"order\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "customerPhone",
+        "table": "order"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"customerPhone\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "order",
+          "customerPhone"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"customerPhone\"",
+        "sql": "ALTER TABLE \"public\".\"order\" ADD COLUMN \"customerPhone\" text"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"customerPhone\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "order",
+          "customerPhone"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.order.lastPaymentSyncAt",
+    "label": "Add column \"lastPaymentSyncAt\" to \"order\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "lastPaymentSyncAt",
+        "table": "order"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"lastPaymentSyncAt\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "order",
+          "lastPaymentSyncAt"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"lastPaymentSyncAt\"",
+        "sql": "ALTER TABLE \"public\".\"order\" ADD COLUMN \"lastPaymentSyncAt\" timestamptz"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"lastPaymentSyncAt\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "order",
+          "lastPaymentSyncAt"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.order.paymentEnvironment",
+    "label": "Add column \"paymentEnvironment\" to \"order\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "paymentEnvironment",
+        "table": "order"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"paymentEnvironment\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "order",
+          "paymentEnvironment"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"paymentEnvironment\"",
+        "sql": "ALTER TABLE \"public\".\"order\" ADD COLUMN \"paymentEnvironment\" text"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"paymentEnvironment\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "order",
+          "paymentEnvironment"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.order.paymentStatus",
+    "label": "Add column \"paymentStatus\" to \"order\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "paymentStatus",
+        "table": "order"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"paymentStatus\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "order",
+          "paymentStatus"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"paymentStatus\"",
+        "sql": "ALTER TABLE \"public\".\"order\" ADD COLUMN \"paymentStatus\" text DEFAULT 'NOT_STARTED' NOT NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"paymentStatus\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "order",
+          "paymentStatus"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.order.refundedAmount",
+    "label": "Add column \"refundedAmount\" to \"order\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "refundedAmount",
+        "table": "order"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"refundedAmount\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "order",
+          "refundedAmount"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"refundedAmount\"",
+        "sql": "ALTER TABLE \"public\".\"order\" ADD COLUMN \"refundedAmount\" int4 DEFAULT 0 NOT NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"refundedAmount\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "order",
+          "refundedAmount"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.order.order_cashfreeOrderId_key",
+    "label": "Add unique constraint on \"order\" (cashfreeOrderId)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "order_cashfreeOrderId_key",
+        "table": "order"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"order_cashfreeOrderId_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "order_cashfreeOrderId_key",
+          "public",
+          "\"public\".\"order\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"order_cashfreeOrderId_key\"",
+        "sql": "ALTER TABLE \"public\".\"order\" ADD CONSTRAINT \"order_cashfreeOrderId_key\" UNIQUE (\"cashfreeOrderId\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"order_cashfreeOrderId_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "order_cashfreeOrderId_key",
+          "public",
+          "\"public\".\"order\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.paymentAttempt.paymentAttempt_orderId_idx_d284871b",
+    "label": "Create index \"paymentAttempt_orderId_idx_d284871b\" on \"paymentAttempt\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "paymentAttempt_orderId_idx_d284871b",
+        "table": "paymentAttempt"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"paymentAttempt_orderId_idx_d284871b\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"paymentAttempt_orderId_idx_d284871b\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"paymentAttempt_orderId_idx_d284871b\"",
+        "sql": "CREATE INDEX \"paymentAttempt_orderId_idx_d284871b\" ON \"public\".\"paymentAttempt\" (\"orderId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"paymentAttempt_orderId_idx_d284871b\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"paymentAttempt_orderId_idx_d284871b\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.paymentEmail.paymentEmail_orderId_idx_d284871b",
+    "label": "Create index \"paymentEmail_orderId_idx_d284871b\" on \"paymentEmail\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "paymentEmail_orderId_idx_d284871b",
+        "table": "paymentEmail"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"paymentEmail_orderId_idx_d284871b\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"paymentEmail_orderId_idx_d284871b\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"paymentEmail_orderId_idx_d284871b\"",
+        "sql": "CREATE INDEX \"paymentEmail_orderId_idx_d284871b\" ON \"public\".\"paymentEmail\" (\"orderId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"paymentEmail_orderId_idx_d284871b\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"paymentEmail_orderId_idx_d284871b\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.paymentEvent.paymentEvent_orderId_idx_d284871b",
+    "label": "Create index \"paymentEvent_orderId_idx_d284871b\" on \"paymentEvent\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "paymentEvent_orderId_idx_d284871b",
+        "table": "paymentEvent"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"paymentEvent_orderId_idx_d284871b\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"paymentEvent_orderId_idx_d284871b\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"paymentEvent_orderId_idx_d284871b\"",
+        "sql": "CREATE INDEX \"paymentEvent_orderId_idx_d284871b\" ON \"public\".\"paymentEvent\" (\"orderId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"paymentEvent_orderId_idx_d284871b\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"paymentEvent_orderId_idx_d284871b\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.paymentRefund.paymentRefund_orderId_idx_d284871b",
+    "label": "Create index \"paymentRefund_orderId_idx_d284871b\" on \"paymentRefund\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "paymentRefund_orderId_idx_d284871b",
+        "table": "paymentRefund"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"paymentRefund_orderId_idx_d284871b\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"paymentRefund_orderId_idx_d284871b\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"paymentRefund_orderId_idx_d284871b\"",
+        "sql": "CREATE INDEX \"paymentRefund_orderId_idx_d284871b\" ON \"public\".\"paymentRefund\" (\"orderId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"paymentRefund_orderId_idx_d284871b\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"paymentRefund_orderId_idx_d284871b\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.paymentAttempt.paymentAttempt_orderId_fkey",
+    "label": "Add foreign key \"paymentAttempt_orderId_fkey\" on \"paymentAttempt\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "paymentAttempt_orderId_fkey",
+        "table": "paymentAttempt"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"paymentAttempt_orderId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "paymentAttempt_orderId_fkey",
+          "public",
+          "\"public\".\"paymentAttempt\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"paymentAttempt_orderId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"paymentAttempt\"\nADD CONSTRAINT \"paymentAttempt_orderId_fkey\"\nFOREIGN KEY (\"orderId\")\nREFERENCES \"public\".\"order\" (\"id\")\nON DELETE RESTRICT"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"paymentAttempt_orderId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "paymentAttempt_orderId_fkey",
+          "public",
+          "\"public\".\"paymentAttempt\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.paymentEmail.paymentEmail_orderId_fkey",
+    "label": "Add foreign key \"paymentEmail_orderId_fkey\" on \"paymentEmail\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "paymentEmail_orderId_fkey",
+        "table": "paymentEmail"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"paymentEmail_orderId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "paymentEmail_orderId_fkey",
+          "public",
+          "\"public\".\"paymentEmail\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"paymentEmail_orderId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"paymentEmail\"\nADD CONSTRAINT \"paymentEmail_orderId_fkey\"\nFOREIGN KEY (\"orderId\")\nREFERENCES \"public\".\"order\" (\"id\")\nON DELETE RESTRICT"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"paymentEmail_orderId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "paymentEmail_orderId_fkey",
+          "public",
+          "\"public\".\"paymentEmail\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.paymentEvent.paymentEvent_orderId_fkey",
+    "label": "Add foreign key \"paymentEvent_orderId_fkey\" on \"paymentEvent\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "paymentEvent_orderId_fkey",
+        "table": "paymentEvent"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"paymentEvent_orderId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "paymentEvent_orderId_fkey",
+          "public",
+          "\"public\".\"paymentEvent\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"paymentEvent_orderId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"paymentEvent\"\nADD CONSTRAINT \"paymentEvent_orderId_fkey\"\nFOREIGN KEY (\"orderId\")\nREFERENCES \"public\".\"order\" (\"id\")\nON DELETE RESTRICT"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"paymentEvent_orderId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "paymentEvent_orderId_fkey",
+          "public",
+          "\"public\".\"paymentEvent\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.paymentRefund.paymentRefund_orderId_fkey",
+    "label": "Add foreign key \"paymentRefund_orderId_fkey\" on \"paymentRefund\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "paymentRefund_orderId_fkey",
+        "table": "paymentRefund"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"paymentRefund_orderId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "paymentRefund_orderId_fkey",
+          "public",
+          "\"public\".\"paymentRefund\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"paymentRefund_orderId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"paymentRefund\"\nADD CONSTRAINT \"paymentRefund_orderId_fkey\"\nFOREIGN KEY (\"orderId\")\nREFERENCES \"public\".\"order\" (\"id\")\nON DELETE RESTRICT"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"paymentRefund_orderId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "paymentRefund_orderId_fkey",
+          "public",
+          "\"public\".\"paymentRefund\""
+        ]
+      }
+    ]
+  }
+]

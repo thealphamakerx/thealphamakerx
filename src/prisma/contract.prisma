@@ -225,8 +225,17 @@ model Order {
   couponCode     String?
   total          Int
 
+  // Legacy identifiers retained for audit history; new orders use Cashfree.
   razorpayOrderId   String? @unique
   razorpayPaymentId String?
+
+  cashfreeOrderId   String? @unique
+  cashfreePaymentId String?
+  paymentEnvironment String?
+  paymentStatus    String @default("NOT_STARTED")
+  customerPhone    String?
+  refundedAmount   Int @default(0)
+  lastPaymentSyncAt TimestamptzString?
 
   createdAt TimestamptzString @default(now())
   updatedAt temporal.updatedAtString()
@@ -247,4 +256,58 @@ model OrderItem {
 
   @@index([orderId])
   @@index([productId])
+}
+
+
+// One row per gateway attempt. Failure does not cancel the parent order.
+model PaymentAttempt {
+  id String @id
+  orderId String
+  status String
+  amount Int
+  currency String
+  message String?
+  paymentTime TimestamptzString
+  updatedAt temporal.updatedAtString()
+  order Order @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  @@index([orderId])
+}
+
+model PaymentRefund {
+  id String @id
+  orderId String
+  amount Int
+  status String
+  gatewayRefundId String?
+  paymentId String?
+  refundType String @default("MERCHANT_INITIATED")
+  message String?
+  createdAt TimestamptzString @default(now())
+  updatedAt temporal.updatedAtString()
+  order Order @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  @@index([orderId])
+}
+
+// Minimal audit receipts; never store bank/card details or full webhook bodies.
+model PaymentEvent {
+  id String @id
+  orderId String
+  type String
+  source String
+  summary String
+  createdAt TimestamptzString @default(now())
+  order Order @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  @@index([orderId])
+}
+
+// A durable notification record, committed with payment confirmation.
+model PaymentEmail {
+  id String @id
+  orderId String
+  kind String
+  sentAt TimestamptzString?
+  attempts Int @default(0)
+  createdAt TimestamptzString @default(now())
+  order Order @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  @@index([orderId])
 }

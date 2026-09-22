@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
-import { Mail, Phone, MessageCircle, MapPin, AtSign, Video } from "lucide-react";
+import { Mail } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { ContactForm } from "@/components/storefront/contact-form";
 import { siteConfig } from "@/config/site";
 
 export const metadata: Metadata = {
@@ -15,25 +16,7 @@ const CONTACT_ITEMS = [
     value: siteConfig.contactEmail,
     href: `mailto:${siteConfig.contactEmail}`,
   },
-  {
-    icon: Phone,
-    label: "Phone",
-    value: siteConfig.contactPhone,
-    href: `tel:${siteConfig.contactPhone.replace(/\s/g, "")}`,
-  },
-  {
-    icon: MessageCircle,
-    label: "WhatsApp",
-    value: siteConfig.contactPhone,
-    href: siteConfig.whatsappUrl,
-    external: true,
-  },
-  {
-    icon: MapPin,
-    label: "Location",
-    value: siteConfig.location,
-    href: undefined,
-  },
+
 ];
 
 export default function ContactPage() {
@@ -46,13 +29,13 @@ export default function ContactPage() {
         <h1 className="mt-3 text-3xl font-semibold tracking-tight md:text-4xl">Contact Us</h1>
         <p className="mt-4 text-base text-muted-foreground">
           Questions about an order, a refund, or a tracker before you buy? We usually reply
-          within 24 hours.
+          within 24 hours. Email us or fill in the form below.
         </p>
       </section>
 
       <section className="mx-auto max-w-(--breakpoint-sm) px-6 pb-16 md:px-16">
         <div className="flex flex-col gap-4">
-          {CONTACT_ITEMS.map(({ icon: Icon, label, value, href, external }) => (
+          {CONTACT_ITEMS.map(({ icon: Icon, label, value, href }) => (
             <Card key={label}>
               <CardContent className="flex items-center gap-4">
                 <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
@@ -64,7 +47,6 @@ export default function ContactPage() {
                     <a
                       href={href}
                       className="text-sm font-medium hover:underline"
-                      {...(external ? { target: "_blank", rel: "noreferrer" } : {})}
                     >
                       {value}
                     </a>
@@ -77,26 +59,7 @@ export default function ContactPage() {
           ))}
         </div>
 
-        <div className="mt-8 flex items-center justify-center gap-6">
-          <a
-            href={siteConfig.instagramUrl}
-            target="_blank"
-            rel="noreferrer"
-            aria-label="Instagram"
-            className="text-muted-foreground transition-colors hover:text-foreground"
-          >
-            <AtSign className="size-5" />
-          </a>
-          <a
-            href={siteConfig.youtubeUrl}
-            target="_blank"
-            rel="noreferrer"
-            aria-label="YouTube"
-            className="text-muted-foreground transition-colors hover:text-foreground"
-          >
-            <Video className="size-5" />
-          </a>
-        </div>
+        <ContactForm />
       </section>
     </main>
   );

@@ -97,8 +97,8 @@ export default function TermsPage() {
           price.
         </p>
         <p>
-          Payment is taken through Razorpay at the time of the order; we do not offer credit
-          or instalments. Your order is confirmed only once Razorpay reports the payment as
+          Payment is taken through Cashfree at the time of the order; we do not offer credit
+          or instalments. Your order is confirmed only once Cashfree reports the payment as
           successful. We may change prices or run promotions at any time, but a change never
           affects an order already paid for.
         </p>

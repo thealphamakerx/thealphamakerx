@@ -1,9 +1,12 @@
 import { headers } from "next/headers";
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import Link from "next/link";
 import { CheckCircle2, Clock, XCircle } from "lucide-react";
 import { auth } from "@/lib/auth";
 import { getOrderById } from "@/lib/orders";
+import { canAccessOrder } from "@/lib/payments/access";
+import { PaymentConfirmed } from "@/components/checkout/payment-confirmed";
+import { paymentStatusLabel } from "@/lib/payments/labels";
 import { createOrderAccessToken } from "@/lib/order-token";
 import { formatPrice } from "@/lib/pricing";
 import { ORDER_STATUS_LABELS } from "@/constants";
@@ -15,7 +18,8 @@ export const dynamic = "force-dynamic";
 export default async function CheckoutConfirmationPage({
   searchParams,
 }: PageProps<"/checkout/confirmation">) {
-  const { orderId } = await searchParams;
+  const { orderId, token: tokenParam } = await searchParams;
+  const token = typeof tokenParam === "string" ? tokenParam : "";
   if (!orderId || Array.isArray(orderId)) notFound();
 
   const session = await auth.api.getSession({ headers: await headers() });
@@ -24,13 +28,7 @@ export default async function CheckoutConfirmationPage({
 
   const isGuestOrder = order.userId.startsWith("guest:");
 
-  if (session) {
-    if (order.userId !== session.user.id) notFound();
-  } else if (!isGuestOrder) {
-    // A logged-out browser hitting a real account's order — that's the
-    // account/orders flow, not the guest one.
-    redirect("/auth/signin");
-  }
+  if (!canAccessOrder(order, session?.user.id, token)) notFound();
 
   const orderNumber = order.id.slice(0, 8).toUpperCase();
 
@@ -38,15 +36,16 @@ export default async function CheckoutConfirmationPage({
     return (
       <main className="mx-auto flex w-full max-w-(--breakpoint-sm) flex-1 flex-col items-center justify-center gap-4 px-6 py-16 text-center">
         <Clock className="size-12 text-muted-foreground" />
-        <h1 className="text-2xl font-semibold">Confirming Your Payment</h1>
+        <h1 className="text-2xl font-semibold">{paymentStatusLabel(order.paymentStatus)}</h1>
         <p className="text-sm text-muted-foreground">
           Order #{orderNumber} · {formatPrice(order.total)}
         </p>
         <p className="max-w-sm text-sm text-muted-foreground">
-          This usually takes a few seconds — this page will unlock automatically.
+          Access unlocks only after Cashfree confirms payment. If your attempt failed or was interrupted, your order remains unpaid and your cart is saved.
           {order.email && " You'll also get an email once it's done."}
         </p>
-        <PendingPaymentRefresher />
+        <PendingPaymentRefresher orderId={order.id} token={token} initialStatus={order.paymentStatus} />
+        <Link href="/checkout" className={buttonVariants({ variant: "outline" })}>Return to checkout</Link>
       </main>
     );
   }
@@ -70,6 +69,7 @@ export default async function CheckoutConfirmationPage({
 
   return (
     <main className="mx-auto flex w-full max-w-(--breakpoint-sm) flex-1 flex-col items-center justify-center gap-4 px-6 py-16 text-center">
+      <PaymentConfirmed orderId={order.id} />
       <CheckCircle2 className="size-12 text-success" />
       <h1 className="text-2xl font-semibold">You&apos;re In!</h1>
       <p className="text-sm text-muted-foreground">
@@ -78,7 +78,7 @@ export default async function CheckoutConfirmationPage({
       {isGuestOrder ? (
         <p className="max-w-sm text-sm text-muted-foreground">
           Your access is unlocked.{" "}
-          {order.email && "We've also emailed this link to " + order.email + " — "}
+          {order.email && "Your download link will also be sent to " + order.email + " — "}
           use the button below any time to get your files.
         </p>
       ) : (

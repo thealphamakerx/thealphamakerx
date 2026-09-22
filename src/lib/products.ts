@@ -2,23 +2,35 @@ import { cache } from "react";
 import { db } from "@/lib/db";
 
 async function withCardData(products: Awaited<ReturnType<typeof db.orm.public.Product.all>>) {
-  return Promise.all(
-    products.map(async (product) => {
-      const [image, ratingSummary] = await Promise.all([
-        db.orm.public.ProductImage.first({ productId: product.id }),
-        db.orm.public.Review
-          .where({ productId: product.id, status: "APPROVED" })
-          .aggregate((aggregate) => ({ average: aggregate.avg("rating"), count: aggregate.count() })),
-      ]);
+  if (products.length === 0) return [];
 
-      return {
-        ...product,
-        imageUrl: image?.url ?? null,
-        rating: product.ratingOverride ?? ratingSummary.average ?? 0,
-        reviewCount: product.reviewCountOverride ?? ratingSummary.count,
-      };
-    })
-  );
+  const productIds = products.map((product) => product.id);
+  const [images, ratings] = await Promise.all([
+    db.orm.public.ProductImage
+      .where((image) => image.productId.in(productIds))
+      .select("productId", "url")
+      .all(),
+    db.orm.public.Review
+      .where((review) => review.productId.in(productIds))
+      .where({ status: "APPROVED" })
+      .groupBy("productId")
+      .aggregate((aggregate) => ({ average: aggregate.avg("rating"), count: aggregate.count() })),
+  ]);
+  const imageByProduct = new Map<string, string>();
+  for (const image of images) {
+    if (!imageByProduct.has(image.productId)) imageByProduct.set(image.productId, image.url);
+  }
+  const ratingByProduct = new Map(ratings.map((rating) => [rating.productId, rating]));
+
+  return products.map((product) => {
+    const rating = ratingByProduct.get(product.id);
+    return {
+      ...product,
+      imageUrl: imageByProduct.get(product.id) ?? null,
+      rating: product.ratingOverride ?? rating?.average ?? 0,
+      reviewCount: product.reviewCountOverride ?? rating?.count ?? 0,
+    };
+  });
 }
 
 export async function getFeaturedProducts(limit = 4) {

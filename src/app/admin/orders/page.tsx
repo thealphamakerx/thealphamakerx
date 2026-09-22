@@ -1,3 +1,4 @@
+import { paymentStatusLabel } from "@/lib/payments/labels";
 import Link from "next/link";
 import { getRecentOrdersAdmin } from "@/lib/admin";
 import { formatPrice } from "@/lib/pricing";
@@ -43,7 +44,7 @@ export default async function AdminOrdersPage() {
                   {new Date(order.createdAt).toLocaleDateString()}
                 </span>
                 <Badge variant={STATUS_VARIANT[order.status as OrderStatus]}>
-                  {ORDER_STATUS_LABELS[order.status as OrderStatus]}
+                  {order.status === "PENDING" ? paymentStatusLabel(order.paymentStatus) : ORDER_STATUS_LABELS[order.status as OrderStatus]}
                 </Badge>
                 <span className="font-medium">{formatPrice(order.total)}</span>
               </Link>

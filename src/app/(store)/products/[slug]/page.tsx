@@ -1,3 +1,4 @@
+import { cache, Suspense } from "react";
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
@@ -47,15 +48,6 @@ export default async function ProductPage({
 
   const { product, images, features, ratingSummary } = result;
 
-  const session = await auth.api.getSession({ headers: await headers() });
-  const [reviews, eligibleOrderId, wishlistEntry] = await Promise.all([
-    getApprovedReviews(product.id),
-    session ? findEligibleOrderForReview(session.user.id, product.id) : Promise.resolve(null),
-    session
-      ? db.orm.public.Wishlist.first({ userId: session.user.id, productId: product.id })
-      : Promise.resolve(null),
-  ]);
-
   const productJsonLd = {
     "@context": "https://schema.org",
     "@type": "Product",
@@ -99,11 +91,9 @@ export default async function ProductPage({
 
           <div className="flex items-start justify-between gap-4">
             <h1 className="text-3xl font-semibold tracking-tight">{product.name}</h1>
-            <WishlistButton
-              productId={product.id}
-              initialInWishlist={!!wishlistEntry}
-              signedIn={!!session}
-            />
+            <Suspense fallback={<span className="size-8" aria-label="Loading wishlist" />}>
+              <ProductWishlist productId={product.id} />
+            </Suspense>
           </div>
 
           {ratingSummary.count > 0 && (
@@ -138,27 +128,50 @@ export default async function ProductPage({
         </div>
       </div>
 
-      <section className="flex max-w-(--breakpoint-sm) flex-col gap-6">
-        <h2 className="text-xl font-semibold">Reviews</h2>
-
-        {eligibleOrderId && <ReviewForm productId={product.id} />}
-
-        {reviews.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No reviews yet.</p>
-        ) : (
-          <div className="flex flex-col divide-y divide-border">
-            {reviews.map((review) => (
-              <div key={review.id} className="flex flex-col gap-1 py-4">
-                <StarRating rating={review.rating} />
-                {review.comment && <p className="text-sm">{review.comment}</p>}
-                <span className="text-xs text-muted-foreground">
-                  {new Date(review.createdAt).toLocaleDateString()}
-                </span>
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
+      <Suspense fallback={<p role="status" className="text-sm text-muted-foreground">Loading reviews…</p>}>
+        <ProductReviews productId={product.id} />
+      </Suspense>
     </main>
+  );
+}
+
+// Deduplicate the account lookup within this request without caching users across requests.
+const getSession = cache(async () => auth.api.getSession({ headers: await headers() }));
+
+async function ProductWishlist({ productId }: { productId: string }) {
+  const session = await getSession();
+  const entry = session
+    ? await db.orm.public.Wishlist.first({ userId: session.user.id, productId })
+    : null;
+  return <WishlistButton productId={productId} initialInWishlist={!!entry} signedIn={!!session} />;
+}
+
+async function ProductReviews({ productId }: { productId: string }) {
+  const [reviews, eligibleOrderId] = await Promise.all([
+    getApprovedReviews(productId),
+    getSession().then((session) => session ? findEligibleOrderForReview(session.user.id, productId) : null),
+  ]);
+  return (
+    <section className="flex max-w-(--breakpoint-sm) flex-col gap-6">
+      <h2 className="text-xl font-semibold">Reviews</h2>
+
+      {eligibleOrderId && <ReviewForm productId={productId} />}
+
+      {reviews.length === 0 ? (
+        <p className="text-sm text-muted-foreground">No reviews yet.</p>
+      ) : (
+        <div className="flex flex-col divide-y divide-border">
+          {reviews.map((review) => (
+            <div key={review.id} className="flex flex-col gap-1 py-4">
+              <StarRating rating={review.rating} />
+              {review.comment && <p className="text-sm">{review.comment}</p>}
+              <span className="text-xs text-muted-foreground">
+                {new Date(review.createdAt).toLocaleDateString()}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
   );
 }

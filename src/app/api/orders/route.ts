@@ -1,18 +1,9 @@
-import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/lib/db";
+import { auth } from "@/lib/auth";
+import { getOrdersForUser } from "@/lib/orders";
 
-export async function GET() {
-  const orders = await db.orm.public.Order
-    .orderBy((o) => o.createdAt.desc())
-    .all();
-
-  return NextResponse.json(orders);
-}
-
-export async function POST(request: NextRequest) {
-  const data = await request.json();
-
-  const order = await db.orm.public.Order.create(data);
-
-  return NextResponse.json(order, { status: 201 });
+// Orders are created only through the validated checkout route. Never accept arbitrary status/amount writes.
+export async function GET(request: Request) {
+  const session = await auth.api.getSession({ headers: request.headers });
+  if (!session) return Response.json({ error: "Unauthorized" }, { status: 401 });
+  return Response.json(await getOrdersForUser(session.user.id), { headers: { "Cache-Control": "no-store" } });
 }

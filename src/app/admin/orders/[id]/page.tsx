@@ -1,3 +1,5 @@
+import { db } from "@/lib/db";
+import { paymentStatusLabel } from "@/lib/payments/labels";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getOrderById } from "@/lib/orders";
@@ -17,7 +19,12 @@ export default async function AdminOrderDetailPage({
   const order = await getOrderById(id);
   if (!order) notFound();
 
-  const customer = await getUserById(order.userId);
+  const [customer, attempts, refunds, events] = await Promise.all([
+    getUserById(order.userId),
+    db.orm.public.PaymentAttempt.where({ orderId: id }).orderBy((p) => p.paymentTime.desc()).all(),
+    db.orm.public.PaymentRefund.where({ orderId: id }).orderBy((r) => r.createdAt.desc()).all(),
+    db.orm.public.PaymentEvent.where({ orderId: id }).orderBy((e) => e.createdAt.desc()).limit(30).all(),
+  ]);
 
   return (
     <div className="flex flex-col gap-8 md:flex-row">
@@ -66,13 +73,32 @@ export default async function AdminOrderDetailPage({
             </div>
           </CardContent>
         </Card>
+        <Card><CardContent className="space-y-4">
+          <h2 className="font-semibold">Payment attempts</h2>
+          {attempts.length === 0 && <p className="text-sm text-muted-foreground">No payment attempt recorded. This is not a failed payment.</p>}
+          {attempts.map((attempt) => <div key={attempt.id} className="border-t pt-3 text-sm">
+            <p>{paymentStatusLabel(attempt.status)} · {formatPrice(attempt.amount)}</p>
+            <p className="text-xs text-muted-foreground">{attempt.id} · {new Date(attempt.paymentTime).toLocaleString()}</p>
+            {attempt.message && <p>{attempt.message}</p>}
+          </div>)}
+        </CardContent></Card>
+        <Card><CardContent className="space-y-4">
+          <h2 className="font-semibold">Refunds</h2>
+          {refunds.length === 0 && <p className="text-sm text-muted-foreground">No refunds.</p>}
+          {refunds.map((refund) => <div key={refund.id} className="border-t pt-3 text-sm"><p>{refund.status} · {formatPrice(refund.amount)}</p><p className="break-all text-xs">{refund.id}</p>{refund.message && <p>{refund.message}</p>}</div>)}
+        </CardContent></Card>
+        <Card><CardContent className="space-y-3">
+          <h2 className="font-semibold">Payment activity</h2>
+          {events.map((event) => <div key={event.id} className="text-xs"><p>{event.type} · {event.source}</p><p className="text-muted-foreground">{new Date(event.createdAt).toLocaleString()}</p></div>)}
+        </CardContent></Card>
+
       </div>
 
       <aside className="flex w-full flex-col gap-4 md:w-72">
         <Card>
           <CardContent className="flex flex-col gap-2">
             <h2 className="text-sm font-medium">Status</h2>
-            <OrderStatusSelect orderId={order.id} status={order.status} />
+            <OrderStatusSelect orderId={order.id} status={order.status} canRefund={order.status === "PAID" && !!order.cashfreePaymentId && refunds.length === 0} />
           </CardContent>
         </Card>
 
@@ -90,6 +116,11 @@ export default async function AdminOrderDetailPage({
           <CardContent className="flex flex-col gap-2">
             <h2 className="text-sm font-medium">Payment</h2>
             <PaymentStatus status={order.status} />
+            <p className="text-sm">{paymentStatusLabel(order.paymentStatus)}</p>
+            <p className="break-all text-xs text-muted-foreground">Cashfree order: {order.cashfreeOrderId ?? "Not created"}</p>
+            <p className="text-xs">Environment: {order.paymentEnvironment ?? "—"}</p>
+            <p className="text-xs">Refunded: {formatPrice(order.refundedAmount)}</p>
+            <p className="text-xs">Last synced: {order.lastPaymentSyncAt ? new Date(order.lastPaymentSyncAt).toLocaleString() : "Not yet"}</p>
           </CardContent>
         </Card>
       </aside>

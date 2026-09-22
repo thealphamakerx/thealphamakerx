@@ -26,7 +26,7 @@ export default function ShippingPolicyPage() {
 
       <LegalSection title="1. How Delivery Works">
         <p>
-          As soon as Razorpay confirms your payment, your order is marked{" "}
+          As soon as Cashfree confirms your payment, your order is marked{" "}
           <strong>Paid</strong> and your files unlock straight away:
         </p>
         <LegalList
@@ -42,7 +42,7 @@ export default function ShippingPolicyPage() {
       <LegalSection title="2. Delivery Time">
         <p>
           Delivery is immediate — in practice a few seconds. Very occasionally a payment
-          confirmation takes a minute or two to reach us from Razorpay. If your payment
+          confirmation takes a minute or two to reach us from Cashfree. If your payment
           succeeded but access has not unlocked after about five minutes, refresh the order
           page first; if it still has not appeared, contact us and we will unlock it manually.
           A delayed confirmation is a sync delay, not a lost order or a lost payment.
@@ -109,7 +109,7 @@ export default function ShippingPolicyPage() {
           Our prices are in Indian Rupees and our checkout is built for Indian payment methods.
           Because delivery is digital, there is no geographic restriction on the files
           themselves — but whether your card or bank can complete an INR payment depends on
-          your issuer and on the international payment methods Razorpay supports at the time.
+          your issuer and on the international payment methods Cashfree supports at the time.
           If your payment is declined from outside India, that is a restriction at the payment
           stage, and no order is created and no charge is made.
         </p>
@@ -121,7 +121,7 @@ export default function ShippingPolicyPage() {
           <a href={`mailto:${siteConfig.contactEmail}`} className="text-foreground hover:underline">
             {siteConfig.contactEmail}
           </a>{" "}
-          or on {siteConfig.contactPhone}. See also our{" "}
+          or use our <Link href="/contact" className="text-foreground hover:underline">contact form</Link>. See also our{" "}
           <Link href="/terms" className="text-foreground hover:underline">
             Terms &amp; Conditions
           </Link>

@@ -57,7 +57,7 @@ export function LegalList({ items }: { items: string[] }) {
 
 /**
  * Seller identity block. The Consumer Protection (E-Commerce) Rules, 2020 and
- * Razorpay's merchant terms both require the legal name, address and working
+ * Cashfree's merchant terms both require the legal name, address and working
  * contact details of the seller to be published, so every policy page carries
  * this same block rather than burying the details on /contact.
  */
@@ -78,15 +78,9 @@ export function SellerIdentity() {
           {siteConfig.contactEmail}
         </a>
       </span>
-      <span>
-        Phone:{" "}
-        <a
-          href={`tel:${siteConfig.contactPhone.replace(/\s/g, "")}`}
-          className="text-foreground hover:underline"
-        >
-          {siteConfig.contactPhone}
-        </a>
-      </span>
+      <Link href="/contact" className="text-foreground hover:underline">
+        Contact form
+      </Link>
       {siteConfig.gstin && <span>GSTIN: {siteConfig.gstin}</span>}
     </section>
   );

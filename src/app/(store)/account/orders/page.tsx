@@ -1,3 +1,4 @@
+import { paymentStatusLabel } from "@/lib/payments/labels";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import Link from "next/link";
@@ -51,7 +52,7 @@ export default async function AccountOrdersPage() {
                 </span>
               </div>
               <Badge variant={STATUS_VARIANT[order.status]}>
-                {ORDER_STATUS_LABELS[order.status]}
+                {order.status === "PENDING" ? paymentStatusLabel(order.paymentStatus) : ORDER_STATUS_LABELS[order.status]}
               </Badge>
               <span className="text-sm font-medium">{formatPrice(order.total)}</span>
             </Link>

@@ -10,7 +10,7 @@ const FAQS = [
   {
     question: "How do I get the tracker after I pay?",
     answer:
-      "Access is instant. As soon as your payment is confirmed by Razorpay, a download link unlocks on your order confirmation page and in your account under My Orders — no waiting, no shipping.",
+      "Access is instant. As soon as your payment is confirmed by Cashfree, a download link unlocks on your order confirmation page and in your account under My Orders — no waiting, no shipping.",
   },
   {
     question: "What format are the trackers in?",
@@ -25,7 +25,7 @@ const FAQS = [
   {
     question: "Is payment safe?",
     answer:
-      `All payments are processed securely through Razorpay. ${siteConfig.name} never sees or stores your card, UPI, or bank details — see our Privacy Policy for details.`,
+      `All payments are processed securely through Cashfree. ${siteConfig.name} never sees or stores your card, UPI, or bank details — see our Privacy Policy for details.`,
   },
   {
     question: "Can I get a refund?",

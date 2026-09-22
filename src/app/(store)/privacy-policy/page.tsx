@@ -29,8 +29,8 @@ export default function PrivacyPolicyPage() {
 
       <LegalSection title="1. Information We Collect">
         <LegalSubSection title="1.1 Information you give us">
-          If you buy as a guest, we collect only your <strong>email address</strong> — that is
-          all a guest purchase requires. If you create an account, we also collect your
+          At checkout, we collect your <strong>email address</strong> for delivery and your
+          <strong> mobile number</strong> for Cashfree payment processing. If you create an account, we also collect your
           <strong> name</strong> and, where you set one, a <strong>password</strong> that is
           stored only as a salted cryptographic hash and is never readable by us. If you sign
           in with Google instead, we receive your name, email address and profile picture from
@@ -38,11 +38,12 @@ export default function PrivacyPolicyPage() {
           correspondence.
         </LegalSubSection>
         <LegalSubSection title="1.2 Payment information">
-          All payments are processed by Razorpay. We never receive, see or store your card
+          All payments are processed by Cashfree. We never receive, see or store your card
           number, CVV, UPI PIN, net-banking credentials or bank account details — those are
-          handled entirely inside Razorpay&apos;s PCI-DSS compliant systems. What reaches us
-          is limited to a Razorpay order ID, a payment ID and the success or failure of the
-          payment, which we use to mark your order paid and unlock your download.
+          handled entirely inside Cashfree&apos;s PCI-DSS compliant systems. What reaches us
+          includes order and payment identifiers, amounts, payment status, timestamps, and
+          refund status. We retain these records to confirm purchases, deliver downloads,
+          reconcile payments, and resolve support requests.
         </LegalSubSection>
         <LegalSubSection title="1.3 Order and review information">
           We store the products you bought, the amount paid, any coupon applied, and the order
@@ -68,6 +69,7 @@ export default function PrivacyPolicyPage() {
             "A session cookie that keeps you signed in. Deleting it signs you out.",
             "Your shopping cart, held in your browser's local storage on your own device — it is not transmitted to us until you check out.",
             "Standard security cookies used during sign-in to prevent request forgery.",
+            "A checkout reference and signed access token in session storage so an interrupted payment can be resumed in the same browser tab.",
           ]}
         />
         <p>
@@ -100,7 +102,7 @@ export default function PrivacyPolicyPage() {
         </p>
         <LegalList
           items={[
-            "Razorpay Software Private Limited — payment processing. Receives your payment details directly from you and returns a payment result to us.",
+            "Cashfree Payments — payment processing. Receives your payment details directly from you and returns a payment result to us.",
             "Neon — managed PostgreSQL database hosting for your account and order records, and object storage holding the product files.",
             "Resend — transactional email delivery. Receives your email address and the contents of order confirmation and status emails.",
             "Google LLC — only if you choose to sign in with Google, in which case Google authenticates you and tells us your name, email address and profile picture.",

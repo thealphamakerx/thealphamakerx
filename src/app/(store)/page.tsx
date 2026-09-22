@@ -1,3 +1,5 @@
+import { Suspense } from "react";
+import { ProductGridSkeleton } from "@/components/storefront/product-grid-skeleton";
 import { Hero } from "@/components/storefront/hero";
 import { TrustBar } from "@/components/storefront/trust-bar";
 import { FeaturedProducts } from "@/components/storefront/featured-products";
@@ -13,7 +15,7 @@ export default function HomePage() {
     <main className="storefront-home flex flex-1 flex-col">
       <Hero />
       <TrustBar />
-      <FeaturedProducts />
+      <Suspense fallback={<ProductGridSkeleton />}><FeaturedProducts /></Suspense>
       <Founder />
       <Testimonials />
       <Faq />
