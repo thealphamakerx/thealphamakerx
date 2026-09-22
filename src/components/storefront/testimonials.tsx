@@ -35,7 +35,7 @@ export function Testimonials() {
       </div>
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
         {TESTIMONIALS.map((t) => (
-          <Card key={t.name} className="border-border bg-white shadow-none transition-shadow hover:shadow-lg">
+          <Card key={t.name} className="border-border bg-card shadow-none transition-shadow hover:shadow-lg">
             <CardContent className="flex flex-col gap-4">
               <div className="flex gap-0.5 text-primary">
                 {Array.from({ length: 5 }).map((_, i) => (

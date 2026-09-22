@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { AtSign, Video, Mail } from "lucide-react";
 import { siteConfig } from "@/config/site";
 import { FOOTER_LINKS } from "@/constants";
@@ -8,7 +9,9 @@ export function Footer() {
     <footer className="border-t border-border bg-chrome text-chrome-foreground">
       <div className="mx-auto grid max-w-(--breakpoint-xl) grid-cols-2 gap-8 px-6 py-16 md:grid-cols-5 md:px-16">
         <div className="col-span-2 flex flex-col gap-3">
-          <Link href="/" className="alpha-wordmark w-fit"><span className="brand-symbol">A<span>↗</span></span><span>THE ALPHA<br /><b>MAKER X</b></span></Link>
+          <Link href="/" className="alpha-wordmark w-fit" aria-label="The Alpha Maker X home">
+            <Image src="/logo.png" alt="The Alpha Maker X" width={188} height={32} className="site-logo" />
+          </Link>
           <p className="max-w-xs text-sm text-chrome-foreground/70">{siteConfig.description}</p>
           <div className="mt-2 flex items-center gap-4">
             <a
