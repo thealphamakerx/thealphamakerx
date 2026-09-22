@@ -40,7 +40,10 @@ export async function POST(request: NextRequest) {
       try {
         gateway = await cashfreeRequest("/orders", cashfreeOrderSchema, {
           order_id: gatewayOrderId, order_amount: order.total / 100, order_currency: "INR",
-          customer_details: { customer_id: order.id, customer_email: order.email, customer_phone: order.customerPhone },
+          customer_details: {
+            customer_id: order.id, customer_email: order.email, customer_phone: order.customerPhone,
+            ...(typeof body.customerName === "string" && body.customerName.trim() ? { customer_name: body.customerName.trim().slice(0, 100) } : {}),
+          },
           order_meta: {
             return_url: `${returnOrigin}/checkout/confirmation?orderId=${order.id}&token=${createCheckoutToken(order.id)}`,
             notify_url: `${webhookOrigin}/api/webhooks/cashfree`,
@@ -62,8 +65,16 @@ export async function POST(request: NextRequest) {
     if (!gateway.payment_session_id) throw new Error("Missing payment session");
     await db.orm.public.Order.where({ id: order.id, paymentStatus: "NOT_STARTED" }).update({ paymentStatus: "ACTIVE" });
     return NextResponse.json({ paymentSessionId: gateway.payment_session_id, mode });
-  } catch {
-    console.error(`Cashfree checkout unavailable for order ${order.id}`);
+  } catch (error) {
+    console.error("Cashfree checkout unavailable", {
+      orderId: order.id,
+      environment: process.env.CASHFREE_ENV,
+      status: error instanceof CashfreeError ? error.status : undefined,
+      code: error instanceof CashfreeError ? error.code : "checkout_configuration_or_response_error",
+    });
+    if (error instanceof CashfreeError && [401, 403].includes(error.status)) {
+      return NextResponse.json({ error: "Payments are temporarily unavailable due to a payment configuration issue. Please contact support." }, { status: 503 });
+    }
     return NextResponse.json({ error: "Could not start payment. Your order is saved; please retry." }, { status: 502 });
   }
 }

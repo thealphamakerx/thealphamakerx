@@ -30,6 +30,7 @@ export default function CheckoutPage() {
   const [appliedCoupon, setAppliedCoupon] = useState("");
   const [guestEmail, setGuestEmail] = useState("");
   const [phone, setPhone] = useState("");
+  const [customerName, setCustomerName] = useState("");
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [scriptReady, setScriptReady] = useState(false);
@@ -105,7 +106,7 @@ export default function CheckoutPage() {
       }
       const response = await fetch("/api/cashfree/create-order", {
         method: "POST", headers: { "Content-Type": "application/json", "x-checkout-token": saved.token },
-        body: JSON.stringify({ orderId: saved.id }),
+        body: JSON.stringify({ orderId: saved.id, customerName: customerName.trim() }),
       });
       const data = await response.json();
       if (!response.ok) {
@@ -206,10 +207,12 @@ export default function CheckoutPage() {
       )}
 
       <div className="flex flex-col gap-2">
+        <label htmlFor="payment-name" className="text-sm font-medium">Name</label>
+        <Input id="payment-name" autoComplete="name" maxLength={100} value={customerName} onChange={(event) => setCustomerName(event.target.value)} placeholder="Your full name" />
         <label htmlFor="payment-phone" className="text-sm font-medium">Mobile number</label>
         <Input id="payment-phone" type="tel" inputMode="numeric" autoComplete="tel-national" maxLength={10}
           value={phone} onChange={(event) => setPhone(event.target.value.replace(/\D/g, ""))} placeholder="10-digit Indian mobile number" />
-        <p className="text-xs text-muted-foreground">Used by Cashfree to process your payment.</p>
+        <p className="text-xs text-muted-foreground">Cashfree requires your mobile number to process payment securely.</p>
       </div>
 
       <div className="flex flex-col gap-3 rounded-2xl border border-border p-6">

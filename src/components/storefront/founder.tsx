@@ -5,7 +5,7 @@ import { siteConfig } from "@/config/site";
 export function Founder() {
   return (
     <section className="border-t border-border bg-secondary/30">
-      <div className="mx-auto grid max-w-(--breakpoint-xl) grid-cols-1 items-center gap-16 px-6 py-24 md:grid-cols-[.8fr_1.2fr] md:px-16">
+      <div className="mx-auto grid max-w-(--breakpoint-xl) grid-cols-1 items-center gap-8 px-6 py-14 md:grid-cols-[.8fr_1.2fr] md:gap-16 md:px-16 md:py-24">
         <div className="relative flex min-h-80 flex-col justify-between rounded-md border border-border bg-card p-8 text-foreground">
           <Quote className="size-9" />
           <p className="my-8 font-heading text-3xl font-medium leading-tight tracking-tight">Confidence is a skill.<br />You can build it.</p>

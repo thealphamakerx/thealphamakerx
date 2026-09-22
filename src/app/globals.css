@@ -158,5 +158,52 @@ a:focus-visible, button:focus-visible { outline: 2px solid var(--primary); outli
 .hero-bottom { border-color: var(--border); }
 .product-card { background: var(--card); border-radius: 4px; }
 .product-card:hover { transform: translateY(-3px); border-color: var(--primary); box-shadow: 0 18px 40px -25px #000; }
-@media (max-width: 380px) { .site-logo { width: 155px; } .header-inner { gap: 12px; padding-inline: 16px; } }
+.mobile-menu { display: none; }
+.hero-grid > *, .storefront-home, .product-card { min-width: 0; }
+.product-card { overflow-wrap: anywhere; }
+@media (max-width: 900px) {
+  .header-inner { height: 68px; padding-inline: 20px; gap: 12px; }
+  .header-nav { display: none; }
+  .header-actions { gap: 4px; }
+  .header-icon { display: grid; place-items: center; min-width: 44px; min-height: 44px; padding: 10px; }
+  .mobile-menu { display: block; border-top: 1px solid var(--border); }
+  .mobile-menu summary { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; cursor: pointer; font-size: 13px; list-style: none; }
+  .mobile-menu summary::-webkit-details-marker { display: none; }
+  .mobile-menu summary:focus-visible { outline: 2px solid var(--ring); outline-offset: -3px; }
+  .mobile-menu[open] summary { background: var(--secondary); }
+  .mobile-menu nav { display: grid; padding: 8px 20px 16px; border-top: 1px solid var(--border); }
+  .mobile-menu nav a { display: flex; justify-content: space-between; align-items: center; min-height: 48px; border-bottom: 1px solid var(--border); font-size: 15px; }
+  .hero-grid { grid-template-columns: minmax(0, 1fr); padding: 40px 24px 20px; }
+  .hero-copy { max-width: 600px; width: 100%; margin-inline: auto; }
+  .hero-copy h1 { font-size: clamp(2.5rem, 8.5vw, 4.5rem); }
+  .hero-art { width: min(100%, 440px); margin: 32px auto 0; height: 470px; transform: none; }
+  .guide-back { right: 15px; }
+  .guide-front { left: 15px; }
+  .hero-bottom { flex-wrap: wrap; gap: 12px; }
+}
+@media (max-width: 480px) {
+  .header-inner { padding-inline: 16px; }
+  .header-inner .site-logo { width: clamp(145px, 43vw, 188px); }
+  .hero-grid { padding-inline: 20px; }
+  .hero-copy h1 { font-size: clamp(2.25rem, 9.6vw, 3.4rem); overflow-wrap: normal; }
+  .eyebrow { font-size: 10px; letter-spacing: .1em; gap: 8px; }
+  .hero-actions { flex-direction: column; align-items: stretch; gap: 14px; }
+  .hero-actions .alpha-text-link { justify-content: center; min-height: 44px; }
+  .hero-assurance { gap: 12px; font-size: 11px; }
+  .hero-assurance svg { flex-shrink: 0; }
+  .hero-art { height: 400px; }
+  .guide-front { width: 61%; height: 280px; padding: 18px; left: 5%; top: 45px; }
+  .guide-back { width: 58%; height: 270px; padding: 18px; right: 5%; top: 42px; }
+  .guide-front strong { font-size: 29px; }
+  .guide-back strong { font-size: 24px; }
+  .book-brand, .book-edition { font-size: 7px; }
+  .book-bottom { font-size: 6px; left: 18px; }
+  .book-symbol { font-size: 64px; }
+  .art-tag { bottom: 30px; padding: 12px; gap: 8px; }
+  .art-tag strong { font-size: 12px; }
+  .art-caption { font-size: 8px; letter-spacing: .08em; left: 0; bottom: 0; }
+  .storefront-home > section:not(:first-child) { animation: none; }
+  .storefront-home > section > .grid { min-width: 0; }
+  .storefront-home .section-heading { font-size: 2rem; }
+}
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } *, *::before, *::after { animation: none !important; transition-duration: .01ms !important; } }
