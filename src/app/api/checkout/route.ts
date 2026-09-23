@@ -1,63 +1,39 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { getCartSummary } from "@/lib/cart";
 import { rateLimit, getClientIp } from "@/lib/rate-limit";
 import { createCheckoutToken } from "@/lib/payments/access";
 import { z } from "zod";
-import type { CartItem } from "@/types";
 
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
+// There are no customer accounts: every order belongs to the buyer's email.
 export async function POST(request: NextRequest) {
-  const session = await auth.api.getSession({ headers: request.headers });
   const parsed = z.object({
-    email: z.string().email().max(254).optional(),
+    email: z.string().trim().toLowerCase().pipe(z.string().email().max(254)),
     phone: z.string().regex(/^[6-9]\d{9}$/),
-    items: z.array(z.object({ productId: z.string().min(1).max(100), quantity: z.number().int().min(1).max(100) })).min(1).max(50),
+    productIds: z.array(z.string().min(1).max(100)).min(1).max(50),
     couponCode: z.string().max(100).optional(),
   }).safeParse(await request.json().catch(() => null));
-  if (!parsed.success) return NextResponse.json({ error: "Enter a valid email, Indian mobile number and cart." }, { status: 400 });
+  if (!parsed.success) return NextResponse.json({ error: "Enter a valid email and 10-digit Indian mobile number." }, { status: 400 });
   const body = parsed.data;
 
-  let userId: string;
-  let email: string | null;
-
-  if (session) {
-    userId = session.user.id;
-    email = session.user.email;
-  } else {
-    const guestEmail = typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
-    if (!EMAIL_RE.test(guestEmail)) {
-      return NextResponse.json(
-        { error: "A valid email is required to check out as a guest" },
-        { status: 400 }
-      );
-    }
-    userId = `guest:${guestEmail}`;
-    email = guestEmail;
-  }
-
-  const rateLimitKey = session ? session.user.id : getClientIp(request);
-  const limit = rateLimit(`checkout:${rateLimitKey}`, { windowMs: 60_000, max: 10 });
+  const limit = rateLimit(`checkout:${getClientIp(request)}`, { windowMs: 60_000, max: 10 });
   if (!limit.allowed) {
     return NextResponse.json({ error: "Too many attempts, please slow down" }, { status: 429 });
   }
 
-  const items: CartItem[] = body.items ?? [];
-
-  const summary = await getCartSummary(items, {
+  const userId = `guest:${body.email}`;
+  const summary = await getCartSummary(body.productIds, {
     couponCode: body.couponCode,
     userId,
   });
   if (summary.lines.length === 0) {
-    return NextResponse.json({ error: "Cart is empty" }, { status: 400 });
+    return NextResponse.json({ error: "This product is no longer available" }, { status: 400 });
   }
 
   const order = await db.transaction(async (tx) => {
     const newOrder = await tx.orm.public.Order.create({
       userId,
-      email,
+      email: body.email,
       customerPhone: body.phone,
       status: "PENDING",
       subtotal: summary.subtotal,

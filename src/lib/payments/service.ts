@@ -4,7 +4,7 @@ import { cashfreeEnvironment, cashfreeRequest, cashfreeRefundSchema, fetchCashfr
 import { paymentPool, paymentTransaction } from "./pool";
 import { applyPaymentSnapshot } from "./store";
 import { sendOrderConfirmationEmail, sendOrderStatusEmail } from "@/lib/email";
-import { createOrderAccessToken } from "@/lib/order-token";
+import { createOrderAccessToken, createOrdersKey } from "@/lib/order-token";
 import { siteConfig } from "@/config/site";
 
 export async function reconcilePayment(orderId: string, event: { id: string; type: string; source: string; refundId?: string; refundStatus?: string } = { id: randomUUID(), type: "STATUS_SYNC", source: "poll" }) {
@@ -44,7 +44,8 @@ export async function deliverPaymentEmails(limit = 5) {
         if (!order.email) throw new Error("Buyer email is missing");
         if (email.kind === "PAID") {
           await sendOrderConfirmationEmail({ to: order.email, orderId: order.id, total: order.total,
-            downloadUrl: `${siteConfig.url}/download/${createOrderAccessToken(order.id)}`, idempotencyKey: email.id });
+            downloadUrl: `${siteConfig.url}/download/${createOrderAccessToken(order.id)}`,
+            ordersUrl: `${siteConfig.url}/orders?key=${createOrdersKey(order.email)}`, idempotencyKey: email.id });
         } else {
           await sendOrderStatusEmail({ to: order.email, orderId: order.id, status: email.kind, idempotencyKey: email.id });
         }

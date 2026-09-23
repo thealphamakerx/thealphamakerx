@@ -1,16 +1,11 @@
-import { cache, Suspense } from "react";
+import { Suspense } from "react";
 import type { Metadata } from "next";
-import { headers } from "next/headers";
 import { notFound } from "next/navigation";
-import { auth } from "@/lib/auth";
 import { getProductBySlug } from "@/lib/products";
-import { findEligibleOrderForReview, getApprovedReviews } from "@/lib/reviews";
-import { db } from "@/lib/db";
+import { getApprovedReviews } from "@/lib/reviews";
 import { siteConfig } from "@/config/site";
 import { Gallery } from "@/components/product/gallery";
 import { PurchasePanel } from "@/components/product/purchase-panel";
-import { ReviewForm } from "@/components/product/review-form";
-import { WishlistButton } from "@/components/product/wishlist-button";
 import { StarRating } from "@/components/shared/star-rating";
 import { Badge } from "@/components/ui/badge";
 import { Check } from "lucide-react";
@@ -89,12 +84,7 @@ export default async function ProductPage({
             </Badge>
           )}
 
-          <div className="flex items-start justify-between gap-4">
-            <h1 className="text-3xl font-semibold tracking-tight">{product.name}</h1>
-            <Suspense fallback={<span className="size-8" aria-label="Loading wishlist" />}>
-              <ProductWishlist productId={product.id} />
-            </Suspense>
-          </div>
+          <h1 className="text-3xl font-semibold tracking-tight">{product.name}</h1>
 
           {ratingSummary.count > 0 && (
             <StarRating rating={ratingSummary.average} count={ratingSummary.count} />
@@ -121,7 +111,7 @@ export default async function ProductPage({
           )}
 
           <PurchasePanel
-            productId={product.id}
+            slug={product.slug}
             price={product.price}
             originalPrice={product.originalPrice}
           />
@@ -135,27 +125,11 @@ export default async function ProductPage({
   );
 }
 
-// Deduplicate the account lookup within this request without caching users across requests.
-const getSession = cache(async () => auth.api.getSession({ headers: await headers() }));
-
-async function ProductWishlist({ productId }: { productId: string }) {
-  const session = await getSession();
-  const entry = session
-    ? await db.orm.public.Wishlist.first({ userId: session.user.id, productId })
-    : null;
-  return <WishlistButton productId={productId} initialInWishlist={!!entry} signedIn={!!session} />;
-}
-
 async function ProductReviews({ productId }: { productId: string }) {
-  const [reviews, eligibleOrderId] = await Promise.all([
-    getApprovedReviews(productId),
-    getSession().then((session) => session ? findEligibleOrderForReview(session.user.id, productId) : null),
-  ]);
+  const reviews = await getApprovedReviews(productId);
   return (
     <section className="flex max-w-(--breakpoint-sm) flex-col gap-6">
       <h2 className="text-xl font-semibold">Reviews</h2>
-
-      {eligibleOrderId && <ReviewForm productId={productId} />}
 
       {reviews.length === 0 ? (
         <p className="text-sm text-muted-foreground">No reviews yet.</p>

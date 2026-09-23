@@ -84,6 +84,7 @@ export async function sendOrderConfirmationEmail({
   orderId,
   total,
   downloadUrl,
+  ordersUrl,
   idempotencyKey,
 }: {
   to: string;
@@ -92,6 +93,8 @@ export async function sendOrderConfirmationEmail({
   /** Guest orders don't have an account Purchases page — link straight to
    *  the token-protected public download page instead. */
   downloadUrl?: string;
+  /** Every order placed with this email — there are no customer accounts. */
+  ordersUrl?: string;
   idempotencyKey?: string;
 }) {
   const resend = getResendClient();
@@ -110,7 +113,25 @@ export async function sendOrderConfirmationEmail({
           ? `<p><a href="${downloadUrl}">Click here to get your files</a></p>`
           : `<p>You can access it any time from your account's Purchases page.</p>`
       }
+      ${ordersUrl ? `<p><a href="${ordersUrl}">View all your orders</a></p>` : ""}
     `,
   }, idempotencyKey ? { idempotencyKey } : undefined);
   if (error) throw new Error("Confirmation email could not be sent");
+}
+
+export async function sendOrdersLinkEmail({ to, ordersUrl }: { to: string; ordersUrl: string }) {
+  const resend = getResendClient();
+  if (!resend) throw new Error("Email service is unavailable");
+
+  const { error } = await resend.emails.send({
+    from: FROM,
+    to,
+    subject: "Your orders",
+    html: `
+      <p>Here's the link to every purchase made with this email address.</p>
+      <p><a href="${ordersUrl}">View your orders and downloads</a></p>
+      <p>Keep this email — the link always works. If you didn't request it, you can ignore it.</p>
+    `,
+  });
+  if (error) throw new Error("Orders email could not be sent");
 }

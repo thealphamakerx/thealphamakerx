@@ -33,8 +33,8 @@ export default function ShippingPolicyPage() {
           items={[
             "You are taken to an order confirmation page carrying your download link",
             "We email the same link to the address you gave at checkout, as your receipt and backup",
-            "If you have an account, the purchase also appears permanently under My Orders",
-            "If you checked out as a guest, your emailed link is permanent and is the way back to your files — keep that email",
+            "The purchase also appears under My Orders, on this device or via a link we email you on request",
+            "Your emailed download link is permanent and is a way back to your files — keep that email",
           ]}
         />
       </LegalSection>
@@ -86,7 +86,7 @@ export default function ShippingPolicyPage() {
           items={[
             "Your spam, promotions and junk folders for the confirmation email",
             "That the email address you entered at checkout was spelled correctly",
-            "That you are signed in to the same account you bought with, if you used an account",
+            "My Orders on our website, where you can request a fresh link to your purchases by email",
           ]}
         />
         <p>

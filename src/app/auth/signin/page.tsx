@@ -29,7 +29,7 @@ export default function SignInPage() {
       return;
     }
 
-    router.push("/account/orders");
+    router.push("/admin");
   }
 
   return (
@@ -72,7 +72,7 @@ export default function SignInPage() {
               or
               <span className="h-px flex-1 bg-border" />
             </div>
-            <GoogleSignIn callbackURL="/account/orders" />
+            <GoogleSignIn callbackURL="/admin" />
           </>
         )}
       </form>

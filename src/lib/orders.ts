@@ -9,11 +9,21 @@ export async function getOrderById(orderId: string) {
   return { ...order, items };
 }
 
-export async function getOrdersForUser(userId: string) {
-  return db.orm.public.Order
-    .where({ userId })
+export async function getOrdersForEmail(email: string) {
+  const orders = await db.orm.public.Order
+    .where({ email: email.trim().toLowerCase() })
     .orderBy((o) => o.createdAt.desc())
     .all();
+  if (orders.length === 0) return [];
+
+  const items = await db.orm.public.OrderItem
+    .where((item) => item.orderId.in(orders.map((order) => order.id)))
+    .all();
+
+  return orders.map((order) => ({
+    ...order,
+    items: items.filter((item) => item.orderId === order.id),
+  }));
 }
 
 /**

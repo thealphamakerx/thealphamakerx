@@ -1,25 +1,24 @@
 import { db } from "@/lib/db";
 import { validateCoupon } from "@/lib/coupons";
-import type { CartItem } from "@/types";
 
+// Digital products: each product is bought at most once per order, so a
+// checkout is just a set of product IDs, always quantity 1.
 export async function getCartSummary(
-  items: CartItem[],
+  productIds: string[],
   options?: { couponCode?: string; userId?: string }
 ) {
   const lines = await Promise.all(
-    items.map(async (item) => {
-      const product = await db.orm.public.Product.first({ id: item.productId });
+    [...new Set(productIds)].map(async (productId) => {
+      const product = await db.orm.public.Product.first({ id: productId, isActive: true });
       if (!product) return null;
-
-      const quantity = Math.max(1, item.quantity);
 
       return {
         productId: product.id,
         productName: product.name,
         productSlug: product.slug,
         unitPrice: product.price,
-        quantity,
-        lineTotal: product.price * quantity,
+        quantity: 1,
+        lineTotal: product.price,
       };
     })
   );

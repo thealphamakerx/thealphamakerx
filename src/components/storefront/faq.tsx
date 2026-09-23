@@ -10,7 +10,7 @@ const FAQS = [
   {
     question: "How do I get the tracker after I pay?",
     answer:
-      "Access is instant. As soon as your payment is confirmed by Cashfree, a download link unlocks on your order confirmation page and in your account under My Orders — no waiting, no shipping.",
+      "Access is instant. As soon as your payment is confirmed by Cashfree, a download link unlocks on your order confirmation page, by email, and under My Orders — no waiting, no shipping.",
   },
   {
     question: "What format are the trackers in?",
@@ -35,7 +35,7 @@ const FAQS = [
   {
     question: "Do I need to create an account to buy?",
     answer:
-      "No — you can check out as a guest with just your email. You'll get your download link on the confirmation page and by email. Creating a free account is optional and just gives you a permanent order history.",
+      "No — there are no accounts. You check out with just your email, and get your download link on the confirmation page and by email. You can see all your purchases any time under My Orders.",
   },
 ];
 

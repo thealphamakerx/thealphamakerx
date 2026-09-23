@@ -23,7 +23,8 @@ export type CashfreePayment = z.infer<typeof cashfreePaymentSchema>;
 export type CashfreeRefund = z.infer<typeof cashfreeRefundSchema>;
 
 export class CashfreeError extends Error {
-  constructor(public status: number, public code: string) { super(`Cashfree ${status}: ${code}`); }
+  // `detail` is Cashfree's human-readable message (e.g. which field failed validation); safe to log, never shown to buyers.
+  constructor(public status: number, public code: string, public detail?: string) { super(`Cashfree ${status}: ${code}`); }
 }
 
 export function cashfreeEnvironment(): "sandbox" | "production" {
@@ -61,8 +62,14 @@ export async function cashfreeRequest<T>(path: string, schema: z.ZodType<T>, bod
     body: body === undefined ? undefined : JSON.stringify(body),
     signal: AbortSignal.timeout(12_000),
   });
-  const data = await response.json();
-  if (!response.ok) throw new CashfreeError(response.status, typeof data?.code === "string" ? data.code : "request_failed");
+  const data = await response.json().catch(() => null);
+  if (!response.ok) {
+    throw new CashfreeError(
+      response.status,
+      typeof data?.code === "string" ? data.code : "request_failed",
+      typeof data?.message === "string" ? data.message.slice(0, 300) : undefined,
+    );
+  }
   return schema.parse(data);
 }
 

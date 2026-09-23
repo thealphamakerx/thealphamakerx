@@ -1,16 +1,14 @@
 "use client";
 import { useEffect } from "react";
-import { useCart } from "@/hooks/use-cart";
+import { rememberOrdersKey } from "@/components/orders/orders-key";
 
-export function PaymentConfirmed({ orderId }: { orderId: string }) {
-  const { clearCart, items } = useCart();
+export function PaymentConfirmed({ orderId, ordersKey }: { orderId: string; ordersKey: string | null }) {
   useEffect(() => {
+    if (ordersKey) rememberOrdersKey(ordersKey);
     try {
       const saved = JSON.parse(sessionStorage.getItem("cashfree-checkout") || "null");
-      if (saved?.id !== orderId) return;
-      if (JSON.stringify(JSON.parse(saved.key).items) === JSON.stringify(items)) clearCart();
-      sessionStorage.removeItem("cashfree-checkout");
+      if (saved?.id === orderId) sessionStorage.removeItem("cashfree-checkout");
     } catch { /* Storage is optional. */ }
-  }, [clearCart, items, orderId]);
+  }, [orderId, ordersKey]);
   return null;
 }

@@ -12,8 +12,8 @@ export function proxy(request: NextRequest) {
   return NextResponse.next();
 }
 
-// /checkout is deliberately not gated: guests can buy with just an email, and
-// the checkout/confirmation pages enforce order ownership themselves.
+// Only admins sign in. Buyers have no accounts: checkout takes an email, and
+// the confirmation/orders/download pages enforce access with signed tokens.
 export const config = {
-  matcher: ["/account/:path*", "/admin/:path*"],
+  matcher: ["/admin/:path*"],
 };

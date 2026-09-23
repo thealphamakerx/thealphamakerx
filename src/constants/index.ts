@@ -17,10 +17,7 @@ export const FOOTER_LINKS = {
     { label: "Shipping & Delivery Policy", href: "/shipping-policy" },
   ],
   account: [
-    { label: "My Account", href: "/account" },
-    { label: "My Orders", href: "/account/orders" },
-    { label: "Wishlist", href: "/account/wishlist" },
-    { label: "Cart", href: "/cart" },
+    { label: "My Orders", href: "/orders" },
   ],
 } as const;
 

@@ -1,17 +1,26 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { z } from "zod";
 import { getCartSummary } from "@/lib/cart";
-import type { CartItem } from "@/types";
 
+// Price preview for the checkout page. Coupons are scoped per buyer email,
+// matching the userId the checkout route stores on the order.
 export async function POST(request: NextRequest) {
-  const { items, couponCode }: { items: CartItem[]; couponCode?: string } = await request.json();
+  const parsed = z.object({
+    productIds: z.array(z.string().min(1).max(100)).max(50),
+    couponCode: z.string().max(100).optional(),
+    email: z.string().email().max(254).optional(),
+  }).safeParse(await request.json().catch(() => null));
+  if (!parsed.success) return NextResponse.json({ error: "Invalid request" }, { status: 400 });
 
-  const session = await auth.api.getSession({ headers: request.headers });
-
-  const summary = await getCartSummary(items ?? [], {
+  const { productIds, couponCode, email } = parsed.data;
+  const summary = await getCartSummary(productIds, {
     couponCode,
-    userId: session?.user.id,
+    userId: email ? `guest:${email.trim().toLowerCase()}` : undefined,
   });
+
+  if (couponCode && !email && !summary.couponError) {
+    summary.couponError = "Enter your email to apply a coupon";
+  }
 
   return NextResponse.json(summary);
 }

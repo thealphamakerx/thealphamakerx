@@ -30,3 +30,27 @@ export function verifyOrderAccessToken(token: string): string | null {
 
   return orderId;
 }
+
+// Permanent key to a buyer's order history — there are no customer accounts,
+// so "my orders" is scoped to an email address. The key is saved on the
+// buyer's device after payment and can be re-sent to their inbox; knowing an
+// email alone never reveals its orders.
+export function createOrdersKey(email: string): string {
+  const normalized = email.trim().toLowerCase();
+  const signature = crypto.createHmac("sha256", getSecret()).update(`orders:${normalized}`).digest("base64url");
+  return `${Buffer.from(normalized).toString("base64url")}.${signature}`;
+}
+
+export function verifyOrdersKey(key: string): string | null {
+  const [encoded, signature] = key.split(".");
+  if (!encoded || !signature) return null;
+
+  const email = Buffer.from(encoded, "base64url").toString();
+  const expected = Buffer.from(createOrdersKey(email).split(".")[1]);
+  const provided = Buffer.from(signature);
+  if (provided.length !== expected.length || !crypto.timingSafeEqual(provided, expected)) {
+    return null;
+  }
+
+  return email;
+}

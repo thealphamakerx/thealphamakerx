@@ -23,6 +23,7 @@ export async function POST(request: NextRequest) {
   if (order.total < 100) return NextResponse.json({ error: "The minimum payment is ₹1." }, { status: 400 });
   if (!cashfreeConfigured()) return NextResponse.json({ error: "Payments are being set up. Please try again later." }, { status: 503 });
   if (!order.customerPhone) return NextResponse.json({ error: "Please start checkout again and enter your mobile number." }, { status: 409 });
+  const customerName = typeof body.customerName === "string" ? body.customerName.replace(/[^\p{L}\p{M} .'-]/gu, "").trim().slice(0, 100) : "";
   try {
     const mode = cashfreeEnvironment();
     if (order.paymentEnvironment && order.paymentEnvironment !== mode) return NextResponse.json({ error: "Please start a new checkout." }, { status: 409 });
@@ -41,8 +42,11 @@ export async function POST(request: NextRequest) {
         gateway = await cashfreeRequest("/orders", cashfreeOrderSchema, {
           order_id: gatewayOrderId, order_amount: order.total / 100, order_currency: "INR",
           customer_details: {
-            customer_id: order.id, customer_email: order.email, customer_phone: order.customerPhone,
-            ...(typeof body.customerName === "string" && body.customerName.trim() ? { customer_name: body.customerName.trim().slice(0, 100) } : {}),
+            // Cashfree rejects customer IDs with characters outside [A-Za-z0-9_-] in some API
+            // versions; the hex-only form of the UUID is always accepted.
+            customer_id: `c_${order.id.replace(/-/g, "")}`, customer_phone: order.customerPhone,
+            ...(order.email ? { customer_email: order.email } : {}),
+            ...(customerName.length >= 3 ? { customer_name: customerName } : {}),
           },
           order_meta: {
             return_url: `${returnOrigin}/checkout/confirmation?orderId=${order.id}&token=${createCheckoutToken(order.id)}`,
@@ -71,6 +75,7 @@ export async function POST(request: NextRequest) {
       environment: process.env.CASHFREE_ENV,
       status: error instanceof CashfreeError ? error.status : undefined,
       code: error instanceof CashfreeError ? error.code : "checkout_configuration_or_response_error",
+      detail: error instanceof CashfreeError ? error.detail : error instanceof Error ? error.message : String(error),
     });
     if (error instanceof CashfreeError && [401, 403].includes(error.status)) {
       return NextResponse.json({ error: "Payments are temporarily unavailable due to a payment configuration issue. Please contact support." }, { status: 503 });
