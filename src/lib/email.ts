@@ -1,5 +1,4 @@
 import { Resend } from "resend";
-import { formatPrice } from "@/lib/pricing";
 import { siteConfig } from "@/config/site";
 
 // Lazy singleton: constructing Resend() throws synchronously when the API
@@ -23,6 +22,8 @@ function getResendClient(): Resend | null {
 }
 
 const FROM = process.env.RESEND_FROM_EMAIL ?? "orders@thealphamakerx.in";
+// Replies from buyers go to the support inbox rather than the sending address.
+const REPLY_TO = process.env.RESEND_REPLY_TO || siteConfig.contactEmail;
 
 export async function sendContactEmail({ name, email, message }: {
   name: string;
@@ -42,81 +43,36 @@ export async function sendContactEmail({ name, email, message }: {
   if (error) throw new Error("Contact email could not be sent");
 }
 
-const STATUS_EMAIL_COPY: Partial<Record<string, { subject: string; body: string }>> = {
-  CANCELLED: {
-    subject: "Your order was cancelled",
-    body: "Your order has been cancelled.",
-  },
-  REFUNDED: {
-    subject: "Your refund has been processed",
-    body: "Your refund has been processed and should reflect in your account soon.",
-  },
-};
-
-export async function sendOrderStatusEmail({
+/**
+ * Send one email through Resend and return its message id. `idempotencyKey`
+ * makes retries safe: Resend delivers a given key at most once.
+ */
+export async function sendEmail({
   to,
-  orderId,
-  status,
+  subject,
+  html,
+  text,
   idempotencyKey,
+  tags,
+  headers,
 }: {
   to: string;
-  orderId: string;
-  status: string;
+  subject: string;
+  html: string;
+  text?: string;
   idempotencyKey?: string;
-}) {
-  const copy = STATUS_EMAIL_COPY[status];
-  if (!copy) return;
-
-  const resend = getResendClient();
-  if (!resend) throw new Error("Email service is unavailable");
-
-  const { error } = await resend.emails.send({
-    from: FROM,
-    to,
-    subject: `${copy.subject} — #${orderId.slice(0, 8).toUpperCase()}`,
-    html: `<p>${copy.body}</p><p>Order #${orderId.slice(0, 8).toUpperCase()}</p>`,
-  }, idempotencyKey ? { idempotencyKey } : undefined);
-  if (error) throw new Error("Status email could not be sent");
-}
-
-export async function sendOrderConfirmationEmail({
-  to,
-  orderId,
-  total,
-  downloadUrl,
-  ordersUrl,
-  idempotencyKey,
-}: {
-  to: string;
-  orderId: string;
-  total: number;
-  /** Guest orders don't have an account Purchases page — link straight to
-   *  the token-protected public download page instead. */
-  downloadUrl?: string;
-  /** Every order placed with this email — there are no customer accounts. */
-  ordersUrl?: string;
-  idempotencyKey?: string;
+  tags?: { name: string; value: string }[];
+  headers?: Record<string, string>;
 }) {
   const resend = getResendClient();
-  if (!resend) throw new Error("Email service is unavailable");
+  if (!resend) throw new Error("Email service is unavailable (RESEND_API_KEY is not set)");
 
-  const { error } = await resend.emails.send({
-    from: FROM,
-    to,
-    subject: `You're in! — #${orderId.slice(0, 8).toUpperCase()}`,
-    html: `
-      <p>Your purchase is confirmed and your access is unlocked.</p>
-      <p><strong>Order:</strong> #${orderId.slice(0, 8).toUpperCase()}</p>
-      <p><strong>Total:</strong> ${formatPrice(total)}</p>
-      ${
-        downloadUrl
-          ? `<p><a href="${downloadUrl}">Click here to get your files</a></p>`
-          : `<p>You can access it any time from your account's Purchases page.</p>`
-      }
-      ${ordersUrl ? `<p><a href="${ordersUrl}">View all your orders</a></p>` : ""}
-    `,
-  }, idempotencyKey ? { idempotencyKey } : undefined);
-  if (error) throw new Error("Confirmation email could not be sent");
+  const { data, error } = await resend.emails.send(
+    { from: FROM, to, subject, html, text, tags, headers, replyTo: REPLY_TO },
+    idempotencyKey ? { idempotencyKey } : undefined
+  );
+  if (error) throw new Error(`Resend: ${error.message}`);
+  return data?.id ?? null;
 }
 
 export async function sendOrdersLinkEmail({ to, ordersUrl }: { to: string; ordersUrl: string }) {

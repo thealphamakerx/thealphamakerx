@@ -67,7 +67,10 @@ export default async function AdminLandingPagesPage() {
                         </>
                       ) : "—"}
                     </td>
-                    <td className="px-4 py-3 text-right">
+                    <td className="space-x-3 px-4 py-3 text-right whitespace-nowrap">
+                      <Link href={`/admin/landing/${page.id}`} className="inline-flex items-center rounded-lg border border-border px-3 py-1.5 text-xs font-medium hover:bg-secondary/40">
+                        Edit
+                      </Link>
                       <a href={`/lp/${page.slug}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
                         {page.isActive ? "View" : "Preview"} <ExternalLink className="size-3.5" />
                       </a>

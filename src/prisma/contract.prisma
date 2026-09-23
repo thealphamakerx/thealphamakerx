@@ -316,6 +316,8 @@ model PaymentEvent {
 }
 
 // A durable notification record, committed with payment confirmation.
+// Outbox for every order-related email (see lib/emails). One row per message;
+// the id doubles as the Resend idempotency key, so retries never double-send.
 model PaymentEmail {
   id String @id
   orderId String
@@ -323,8 +325,20 @@ model PaymentEmail {
   sentAt TimestamptzString?
   attempts Int @default(0)
   createdAt TimestamptzString @default(now())
+  // Not sent before this time (reminders, retry backoff).
+  sendAfter TimestamptzString @default(now())
+  recipient String?
+  // Set when the message was deliberately not sent (already paid, unsubscribed, disabled…).
+  skippedReason String?
+  lastError String?
+  // Resend's id, and delivery status reported by Resend webhooks.
+  providerId String?
+  deliveryStatus String?
+  deliveryUpdatedAt TimestamptzString?
   order Order @relation(fields: [orderId], references: [id], onDelete: Restrict)
   @@index([orderId])
+  @@index([sentAt, sendAfter])
+  @@index([providerId])
 }
 
 // A combo: several products sold together at one price (in paise).
@@ -392,4 +406,19 @@ model LandingEvent {
 
   @@index([landingSlug, createdAt])
   @@index([visitorId])
+}
+
+// Addresses that unsubscribed from reminders, bounced, or marked mail as spam.
+// Receipts still go out; reminders and failed-payment nudges don't.
+model EmailSuppression {
+  email     String @id
+  reason    String
+  createdAt TimestamptzString @default(now())
+}
+
+// Small admin-editable settings stored as JSON (e.g. key "emails").
+model AppSetting {
+  key       String @id
+  value     String
+  updatedAt temporal.updatedAtString()
 }

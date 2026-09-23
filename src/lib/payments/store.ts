@@ -1,5 +1,9 @@
 import type { PoolClient } from "pg";
 import { paise, paymentState, validateSnapshot, type PaymentSnapshot } from "./state";
+import { queueEmail, queuePaymentFailedEmail } from "@/lib/emails";
+
+// Payment outcomes that leave an order unpaid but still payable.
+const UNPAID_OUTCOMES = new Set(["FAILED", "USER_DROPPED", "CANCELLED", "VOID"]);
 
 // The caller owns the transaction. Row locking serializes webhook, polling and admin updates.
 export async function applyPaymentSnapshot(client: Pick<PoolClient, "query">, orderId: string, snapshot: PaymentSnapshot, event: { id: string; type: string; source: string }) {
@@ -43,11 +47,16 @@ export async function applyPaymentSnapshot(client: Pick<PoolClient, "query">, or
   const { rows: [updated] } = await client.query(`UPDATE public."order" SET status=$2,"paymentStatus"=$3,
     "cashfreePaymentId"=COALESCE("cashfreePaymentId",$4),"refundedAmount"=$5,"lastPaymentSyncAt"=now(),"updatedAt"=now()
     WHERE id=$1 RETURNING *`, [orderId, status, state.paymentStatus, successful?.id ?? null, state.refundedAmount]);
+  // Emails are queued in this same transaction, so they exist exactly when the change commits.
   if (status === "PAID" && order.status === "PENDING") {
-    await client.query('INSERT INTO public."paymentEmail" (id,"orderId",kind) VALUES ($1,$2,$3) ON CONFLICT (id) DO NOTHING', [`paid:${orderId}`, orderId, "PAID"]);
+    await queueEmail(client, `paid:${orderId}`, orderId, "PAID");
+    await queueEmail(client, `admin-sale:${orderId}`, orderId, "ADMIN_NEW_SALE");
   }
   if (status === "REFUNDED" && order.status !== "REFUNDED") {
-    await client.query('INSERT INTO public."paymentEmail" (id,"orderId",kind) VALUES ($1,$2,$3) ON CONFLICT (id) DO NOTHING', [`refunded:${orderId}`, orderId, "REFUNDED"]);
+    await queueEmail(client, `refunded:${orderId}`, orderId, "REFUNDED");
+  }
+  if (status === "PENDING" && UNPAID_OUTCOMES.has(state.paymentStatus) && order.paymentStatus !== state.paymentStatus) {
+    await queuePaymentFailedEmail(client, orderId);
   }
   return updated;
 }

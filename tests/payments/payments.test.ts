@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createHmac, randomUUID } from "node:crypto";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { PGlite } from "@electric-sql/pglite";
 import type { PoolClient } from "pg";
 import { applyPaymentSnapshot } from "../../src/lib/payments/store";
@@ -58,15 +58,19 @@ test("no payment attempt and browser interruption do not become payment success 
 
 async function database() {
   const db = new PGlite();
-  const baseline = JSON.parse(readFileSync(new URL("../../migrations/app/20260917T1015_baseline/ops.json", import.meta.url), "utf8"));
-  const delta = JSON.parse(readFileSync(new URL("../../migrations/app/20260922T0906_cashfree_payments/ops.json", import.meta.url), "utf8"));
-  const refundDelta = JSON.parse(readFileSync(new URL("../../migrations/app/20260922T0958_cashfree_refund_attempts/ops.json", import.meta.url), "utf8"));
-  for (const op of [...baseline.filter((op: { id: string }) => op.id === "table.order"), ...delta, ...refundDelta]) {
-    for (const statement of op.execute) await db.query(statement.sql, statement.params);
+  // Every migration, in order — the same schema production runs.
+  const root = new URL("../../migrations/app/", import.meta.url);
+  for (const dir of readdirSync(root).filter((d) => /^\d/.test(d)).sort()) {
+    for (const op of JSON.parse(readFileSync(new URL(`${dir}/ops.json`, root), "utf8"))) {
+      for (const statement of op.execute) await db.query(statement.sql, statement.params);
+    }
   }
   await db.query(`INSERT INTO public."order" (id,"userId",email,status,subtotal,total,"cashfreeOrderId","paymentEnvironment","updatedAt")
     VALUES ($1,'guest:buyer@example.com','buyer@example.com','PENDING',19900,19900,$2,'sandbox',now())`, [orderId, gatewayId]);
   return db;
+}
+async function emailKinds(db: PGlite) {
+  return (await db.query<{ kind: string }>('SELECT kind FROM "paymentEmail" ORDER BY kind')).rows.map((r) => r.kind);
 }
 async function apply(db: PGlite, state: PaymentSnapshot, id = randomUUID()) {
   return db.transaction(async (tx) => applyPaymentSnapshot(tx as unknown as Pick<PoolClient, "query">, orderId, state, { id, type: "TEST", source: "test" }));
@@ -77,13 +81,16 @@ test("actual migration and transactional flow: failure -> retry success -> dupli
   try {
     let order = await apply(db, snapshot([payment("FAILED")]));
     assert.equal(order.status, "PENDING"); assert.equal(order.paymentStatus, "FAILED");
-    assert.equal((await db.query('SELECT * FROM "paymentEmail"')).rows.length, 0);
+    // A failed attempt queues one delayed "payment failed" nudge (skipped at send time if they then pay).
+    assert.deepEqual(await emailKinds(db), ["PAYMENT_FAILED"]);
+    assert.equal((await db.query(`SELECT 1 FROM "paymentEmail" WHERE "sendAfter" > now()`)).rows.length, 1);
     const success = snapshot([payment("FAILED"), payment("SUCCESS", "payment-2", "2026-09-22T11:00:00Z")]);
     const eventId = randomUUID();
     order = await apply(db, success, eventId);
     assert.equal(order.status, "PAID"); assert.equal(order.cashfreePaymentId, "payment-2");
     await apply(db, success, eventId);
-    assert.equal((await db.query('SELECT * FROM "paymentEmail"')).rows.length, 1);
+    // One receipt and one admin alert, even though the success was applied twice.
+    assert.deepEqual(await emailKinds(db), ["ADMIN_NEW_SALE", "PAID", "PAYMENT_FAILED"]);
     assert.equal((await db.query('SELECT * FROM "paymentAttempt"')).rows.length, 2);
     order = await apply(db, snapshot([payment("FAILED")]));
     assert.equal(order.status, "PAID"); assert.equal(order.paymentStatus, "SUCCESS");
@@ -93,7 +100,7 @@ test("actual migration and transactional flow: failure -> retry success -> dupli
     success.refunds[0].refund_status = "SUCCESS";
     order = await apply(db, success);
     assert.equal(order.status, "REFUNDED"); assert.equal(order.refundedAmount, 19900);
-    assert.equal((await db.query('SELECT * FROM "paymentEmail"')).rows.length, 2);
+    assert.deepEqual(await emailKinds(db), ["ADMIN_NEW_SALE", "PAID", "PAYMENT_FAILED", "REFUNDED"]);
     success.refunds[0].refund_status = "PENDING";
     order = await apply(db, success);
     assert.equal(order.status, "REFUNDED"); assert.equal(order.refundedAmount, 19900);

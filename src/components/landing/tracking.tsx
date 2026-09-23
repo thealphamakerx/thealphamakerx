@@ -43,7 +43,8 @@ export function sendEvent(type: TrackType, extra: Record<string, string> = {}) {
 /** Logs the visit and a half-page scroll. Disabled for unpublished previews. */
 export function LandingTracker({ slug, enabled }: { slug: string; enabled: boolean }) {
   useEffect(() => {
-    current = { slug, vid: visitorId(), utm: visitUtm(), enabled };
+    // The admin editor shows the page in an iframe preview; those views aren't visitors.
+    current = { slug, vid: visitorId(), utm: visitUtm(), enabled: enabled && window.self === window.top };
     sendEvent("view", document.referrer ? { referrer: document.referrer } : {});
 
     const onScroll = () => {

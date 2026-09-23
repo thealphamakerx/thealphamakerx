@@ -1,0 +1,452 @@
+[
+  {
+    "id": "table.appSetting",
+    "label": "Create table \"appSetting\"",
+    "summary": "Creates table \"appSetting\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "appSetting"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"appSetting\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"appSetting\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"appSetting\"",
+        "sql": "CREATE TABLE \"public\".\"appSetting\" (\n  \"key\" text NOT NULL,\n  \"updatedAt\" timestamptz NOT NULL,\n  \"value\" text NOT NULL,\n  PRIMARY KEY (\"key\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"appSetting\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"appSetting\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.emailSuppression",
+    "label": "Create table \"emailSuppression\"",
+    "summary": "Creates table \"emailSuppression\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "emailSuppression"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"emailSuppression\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"emailSuppression\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"emailSuppression\"",
+        "sql": "CREATE TABLE \"public\".\"emailSuppression\" (\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"email\" text NOT NULL,\n  \"reason\" text NOT NULL,\n  PRIMARY KEY (\"email\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"emailSuppression\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"emailSuppression\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.paymentEmail.deliveryStatus",
+    "label": "Add column \"deliveryStatus\" to \"paymentEmail\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "deliveryStatus",
+        "table": "paymentEmail"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"deliveryStatus\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "paymentEmail",
+          "deliveryStatus"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"deliveryStatus\"",
+        "sql": "ALTER TABLE \"public\".\"paymentEmail\" ADD COLUMN \"deliveryStatus\" text"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"deliveryStatus\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "paymentEmail",
+          "deliveryStatus"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.paymentEmail.deliveryUpdatedAt",
+    "label": "Add column \"deliveryUpdatedAt\" to \"paymentEmail\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "deliveryUpdatedAt",
+        "table": "paymentEmail"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"deliveryUpdatedAt\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "paymentEmail",
+          "deliveryUpdatedAt"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"deliveryUpdatedAt\"",
+        "sql": "ALTER TABLE \"public\".\"paymentEmail\" ADD COLUMN \"deliveryUpdatedAt\" timestamptz"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"deliveryUpdatedAt\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "paymentEmail",
+          "deliveryUpdatedAt"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.paymentEmail.lastError",
+    "label": "Add column \"lastError\" to \"paymentEmail\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "lastError",
+        "table": "paymentEmail"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"lastError\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "paymentEmail",
+          "lastError"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"lastError\"",
+        "sql": "ALTER TABLE \"public\".\"paymentEmail\" ADD COLUMN \"lastError\" text"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"lastError\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "paymentEmail",
+          "lastError"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.paymentEmail.providerId",
+    "label": "Add column \"providerId\" to \"paymentEmail\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "providerId",
+        "table": "paymentEmail"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"providerId\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "paymentEmail",
+          "providerId"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"providerId\"",
+        "sql": "ALTER TABLE \"public\".\"paymentEmail\" ADD COLUMN \"providerId\" text"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"providerId\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "paymentEmail",
+          "providerId"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.paymentEmail.recipient",
+    "label": "Add column \"recipient\" to \"paymentEmail\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "recipient",
+        "table": "paymentEmail"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"recipient\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "paymentEmail",
+          "recipient"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"recipient\"",
+        "sql": "ALTER TABLE \"public\".\"paymentEmail\" ADD COLUMN \"recipient\" text"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"recipient\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "paymentEmail",
+          "recipient"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.paymentEmail.sendAfter",
+    "label": "Add column \"sendAfter\" to \"paymentEmail\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "sendAfter",
+        "table": "paymentEmail"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"sendAfter\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "paymentEmail",
+          "sendAfter"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"sendAfter\"",
+        "sql": "ALTER TABLE \"public\".\"paymentEmail\" ADD COLUMN \"sendAfter\" timestamptz DEFAULT (now()) NOT NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"sendAfter\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "paymentEmail",
+          "sendAfter"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.paymentEmail.skippedReason",
+    "label": "Add column \"skippedReason\" to \"paymentEmail\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "skippedReason",
+        "table": "paymentEmail"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"skippedReason\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "paymentEmail",
+          "skippedReason"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"skippedReason\"",
+        "sql": "ALTER TABLE \"public\".\"paymentEmail\" ADD COLUMN \"skippedReason\" text"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"skippedReason\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "paymentEmail",
+          "skippedReason"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.paymentEmail.paymentEmail_providerId_idx_d1904c54",
+    "label": "Create index \"paymentEmail_providerId_idx_d1904c54\" on \"paymentEmail\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "paymentEmail_providerId_idx_d1904c54",
+        "table": "paymentEmail"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"paymentEmail_providerId_idx_d1904c54\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"paymentEmail_providerId_idx_d1904c54\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"paymentEmail_providerId_idx_d1904c54\"",
+        "sql": "CREATE INDEX \"paymentEmail_providerId_idx_d1904c54\" ON \"public\".\"paymentEmail\" (\"providerId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"paymentEmail_providerId_idx_d1904c54\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"paymentEmail_providerId_idx_d1904c54\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.paymentEmail.paymentEmail_sentAt_sendAfter_idx_975609e5",
+    "label": "Create index \"paymentEmail_sentAt_sendAfter_idx_975609e5\" on \"paymentEmail\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "paymentEmail_sentAt_sendAfter_idx_975609e5",
+        "table": "paymentEmail"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"paymentEmail_sentAt_sendAfter_idx_975609e5\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"paymentEmail_sentAt_sendAfter_idx_975609e5\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"paymentEmail_sentAt_sendAfter_idx_975609e5\"",
+        "sql": "CREATE INDEX \"paymentEmail_sentAt_sendAfter_idx_975609e5\" ON \"public\".\"paymentEmail\" (\"sentAt\", \"sendAfter\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"paymentEmail_sentAt_sendAfter_idx_975609e5\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"paymentEmail_sentAt_sendAfter_idx_975609e5\""
+        ]
+      }
+    ]
+  }
+]

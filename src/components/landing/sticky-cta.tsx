@@ -14,7 +14,7 @@ export function StickyCta({ price, compareAt, label, checkoutHref }: { price: st
   useEffect(() => {
     const hero = document.getElementById("hero-cta");
     const checkout = document.getElementById("offers");
-    if (!hero || !checkout) return;
+    if (!hero) return;
     const state = { heroVisible: true, checkoutVisible: false };
     const observer = new IntersectionObserver((entries) => {
       for (const entry of entries) {
@@ -24,7 +24,7 @@ export function StickyCta({ price, compareAt, label, checkoutHref }: { price: st
       setVisible(!state.heroVisible && !state.checkoutVisible);
     });
     observer.observe(hero);
-    observer.observe(checkout);
+    if (checkout) observer.observe(checkout);
     return () => observer.disconnect();
   }, []);
 

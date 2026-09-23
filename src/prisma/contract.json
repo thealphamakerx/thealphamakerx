@@ -8,12 +8,20 @@
       "model": "Account",
       "namespace": "public"
     },
+    "appSetting": {
+      "model": "AppSetting",
+      "namespace": "public"
+    },
     "auditLog": {
       "model": "AuditLog",
       "namespace": "public"
     },
     "coupon": {
       "model": "Coupon",
+      "namespace": "public"
+    },
+    "emailSuppression": {
+      "model": "EmailSuppression",
       "namespace": "public"
     },
     "landingEvent": {
@@ -287,6 +295,47 @@
               "table": "account"
             }
           },
+          "AppSetting": {
+            "fields": {
+              "key": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "updatedAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "value": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {},
+            "storage": {
+              "fields": {
+                "key": {
+                  "column": "key"
+                },
+                "updatedAt": {
+                  "column": "updatedAt"
+                },
+                "value": {
+                  "column": "value"
+                }
+              },
+              "namespaceId": "public",
+              "table": "appSetting"
+            }
+          },
           "AuditLog": {
             "fields": {
               "action": {
@@ -523,6 +572,47 @@
               },
               "namespaceId": "public",
               "table": "coupon"
+            }
+          },
+          "EmailSuppression": {
+            "fields": {
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "email": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "reason": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {},
+            "storage": {
+              "fields": {
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "email": {
+                  "column": "email"
+                },
+                "reason": {
+                  "column": "reason"
+                }
+              },
+              "namespaceId": "public",
+              "table": "emailSuppression"
             }
           },
           "LandingEvent": {
@@ -1473,6 +1563,20 @@
                   "kind": "scalar"
                 }
               },
+              "deliveryStatus": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "deliveryUpdatedAt": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
               "id": {
                 "nullable": false,
                 "type": {
@@ -1487,6 +1591,13 @@
                   "kind": "scalar"
                 }
               },
+              "lastError": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
               "orderId": {
                 "nullable": false,
                 "type": {
@@ -1494,10 +1605,38 @@
                   "kind": "scalar"
                 }
               },
+              "providerId": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "recipient": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "sendAfter": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
               "sentAt": {
                 "nullable": true,
                 "type": {
                   "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "skippedReason": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
                   "kind": "scalar"
                 }
               }
@@ -1527,17 +1666,38 @@
                 "createdAt": {
                   "column": "createdAt"
                 },
+                "deliveryStatus": {
+                  "column": "deliveryStatus"
+                },
+                "deliveryUpdatedAt": {
+                  "column": "deliveryUpdatedAt"
+                },
                 "id": {
                   "column": "id"
                 },
                 "kind": {
                   "column": "kind"
                 },
+                "lastError": {
+                  "column": "lastError"
+                },
                 "orderId": {
                   "column": "orderId"
                 },
+                "providerId": {
+                  "column": "providerId"
+                },
+                "recipient": {
+                  "column": "recipient"
+                },
+                "sendAfter": {
+                  "column": "sendAfter"
+                },
                 "sentAt": {
                   "column": "sentAt"
+                },
+                "skippedReason": {
+                  "column": "skippedReason"
                 }
               },
               "namespaceId": "public",
@@ -2617,6 +2777,33 @@
               },
               "uniques": []
             },
+            "appSetting": {
+              "columns": {
+                "key": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "updatedAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "value": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [],
+              "indexes": [],
+              "primaryKey": {
+                "columns": [
+                  "key"
+                ]
+              },
+              "uniques": []
+            },
             "auditLog": {
               "columns": {
                 "action": {
@@ -2798,6 +2985,37 @@
                   ]
                 }
               ]
+            },
+            "emailSuppression": {
+              "columns": {
+                "createdAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "email": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "reason": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [],
+              "indexes": [],
+              "primaryKey": {
+                "columns": [
+                  "email"
+                ]
+              },
+              "uniques": []
             },
             "landingEvent": {
               "columns": {
@@ -3556,6 +3774,16 @@
                   "nativeType": "timestamptz",
                   "nullable": false
                 },
+                "deliveryStatus": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "deliveryUpdatedAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "nativeType": "timestamptz",
+                  "nullable": true
+                },
                 "id": {
                   "codecId": "pg/text@1",
                   "nativeType": "text",
@@ -3566,14 +3794,43 @@
                   "nativeType": "text",
                   "nullable": false
                 },
+                "lastError": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
                 "orderId": {
                   "codecId": "pg/text@1",
                   "nativeType": "text",
                   "nullable": false
                 },
+                "providerId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "recipient": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "sendAfter": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
                 "sentAt": {
                   "codecId": "pg/timestamptz-string@1",
                   "nativeType": "timestamptz",
+                  "nullable": true
+                },
+                "skippedReason": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
                   "nullable": true
                 }
               },
@@ -3603,6 +3860,23 @@
                   ],
                   "name": "paymentEmail_orderId_idx_d284871b",
                   "prefix": "paymentEmail_orderId_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "providerId"
+                  ],
+                  "name": "paymentEmail_providerId_idx_d1904c54",
+                  "prefix": "paymentEmail_providerId_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "sentAt",
+                    "sendAfter"
+                  ],
+                  "name": "paymentEmail_sentAt_sendAfter_idx_975609e5",
+                  "prefix": "paymentEmail_sentAt_sendAfter_idx",
                   "unique": false
                 }
               ],
@@ -4436,10 +4710,10 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "4dcef1d303832e2aac98cee9863e83db7e3cf391b76b5979e894ffd5ced2684e"
+    "storageHash": "d19c9f19cbaba3f5b29bd7cbf02bc55262801373a810747a80a0867c6c374f51"
   },
   "execution": {
-    "executionHash": "f3c9a12ca35b9645730dca8a87819c5d99ee3fa753ff3e4fd988391744c04b6d",
+    "executionHash": "8aaafa80c94b69d5be76e561556743ae0876dd63d7b75768fdc3d58c33f0c910",
     "mutations": {
       "defaults": [
         {
@@ -4455,6 +4729,21 @@
             "column": "updatedAt",
             "namespace": "public",
             "table": "account"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "onUpdate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "updatedAt",
+            "namespace": "public",
+            "table": "appSetting"
           }
         },
         {

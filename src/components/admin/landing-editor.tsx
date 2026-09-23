@@ -2,11 +2,12 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronDown, ExternalLink } from "lucide-react";
+import { ArrowDown, ArrowUp, ChevronDown, ExternalLink, Eye, EyeOff, PanelRightClose, PanelRightOpen, RotateCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/toast";
 import { formatPrice } from "@/lib/pricing";
-import type { LandingContent } from "@/lib/landing";
+import { DEFAULT_LABELS, SECTION_NAMES, sectionOrder, type LabelKey, type LandingContent } from "@/lib/landing-content";
+import { cn } from "@/lib/utils";
 import { Field, LinesField, ProductPicker, RepeatableList, RupeeInput, TextArea, TextInput, inputClass, slugify } from "./form-fields";
 import { MediaField } from "@/components/media/media-field";
 
@@ -42,6 +43,10 @@ export function LandingEditor({ page, products, offers }: { page: Page; products
   const [content, setContent] = useState<LandingContent>(page.content);
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
+  const [preview, setPreview] = useState(true);
+  const [previewKey, setPreviewKey] = useState(0);
+  const [savedSlug, setSavedSlug] = useState(page.slug);
+  const [previewWidth, setPreviewWidth] = useState<"mobile" | "desktop">("mobile");
 
   const set = (patch: Partial<LandingContent>) => { setContent((c) => ({ ...c, ...patch })); setDirty(true); };
   const setM = (patch: Partial<typeof meta>) => { setMeta((m) => ({ ...m, ...patch })); setDirty(true); };
@@ -55,6 +60,8 @@ export function LandingEditor({ page, products, offers }: { page: Page; products
     if (!res.ok) { toast.add({ title: data.error ?? "Could not save", type: "error" }); return; }
     if (publish !== undefined) setMeta((m) => ({ ...m, isActive: publish }));
     setDirty(false);
+    setSavedSlug(meta.slug);
+    setPreviewKey((k) => k + 1);
     toast.add({ title: publish === true ? "Published" : publish === false ? "Unpublished" : "Saved", type: "success" });
     router.refresh();
   }
@@ -68,9 +75,18 @@ export function LandingEditor({ page, products, offers }: { page: Page; products
   }
 
   const activeProducts = products.filter((p) => p.isActive);
+  const order = sectionOrder(content);
+  const moveSection = (from: number, to: number) => {
+    const next = [...order];
+    const [item] = next.splice(from, 1);
+    next.splice(to, 0, item);
+    set({ sections: next });
+  };
+  const setLabel = (key: LabelKey, value: string) => set({ labels: { ...content.labels, [key]: value } });
 
   return (
-    <div className="flex flex-col gap-4 pb-24">
+    <div className={cn("grid gap-6 pb-24", preview && "xl:grid-cols-[minmax(0,1fr)_420px] 2xl:grid-cols-[minmax(0,1fr)_520px]")}>
+    <div className="flex min-w-0 flex-col gap-4">
       {products.find((p) => p.id === meta.productId)?.isActive === false && (
         <p role="alert" className="rounded-2xl border border-destructive/40 bg-destructive/10 px-5 py-3 text-sm">
           This page&apos;s product is retired, so checkout can&apos;t sell it. Re-list it under Products (Edit details → “Listed in the store”) before publishing.
@@ -93,6 +109,41 @@ export function LandingEditor({ page, products, offers }: { page: Page; products
         >
           <TextInput value={meta.domain} placeholder="mybook.in" onChange={(e) => setM({ domain: e.target.value })} />
         </Field>
+      </Section>
+
+      <Section title="Layout" hint="Section order, what's shown, and hero options" defaultOpen>
+        <div className="flex flex-col gap-1.5">
+          <span className="text-xs font-medium">Sections (the hero is always first)</span>
+          {order.map((section, i) => (
+            <div key={section.key} className={cn("flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm", !section.visible && "opacity-60")}>
+              <span className="w-5 text-xs tabular-nums text-muted-foreground">{i + 1}</span>
+              <span className="min-w-0 flex-1">{SECTION_NAMES[section.key]}</span>
+              <button type="button" aria-label="Move up" disabled={i === 0} onClick={() => moveSection(i, i - 1)} className="rounded p-1 text-muted-foreground hover:text-foreground disabled:opacity-30"><ArrowUp className="size-4" /></button>
+              <button type="button" aria-label="Move down" disabled={i === order.length - 1} onClick={() => moveSection(i, i + 1)} className="rounded p-1 text-muted-foreground hover:text-foreground disabled:opacity-30"><ArrowDown className="size-4" /></button>
+              <button
+                type="button"
+                aria-pressed={section.visible}
+                onClick={() => set({ sections: order.map((s) => (s.key === section.key ? { ...s, visible: !s.visible } : s)) })}
+                className="flex items-center gap-1 rounded-lg px-2 py-1 text-xs text-muted-foreground hover:text-foreground"
+              >
+                {section.visible ? <><Eye className="size-4" /> Shown</> : <><EyeOff className="size-4" /> Hidden</>}
+              </button>
+            </div>
+          ))}
+          <p className="text-xs text-muted-foreground">Sections with no content stay hidden even when shown here. Hiding “Packs &amp; buy buttons” makes every button go straight to checkout.</p>
+        </div>
+        <div className="flex flex-col gap-2">
+          {([
+            ["heroPrice", "Show the price in the hero"],
+            ["heroRating", "Show the star rating in the hero (when the product has reviews)"],
+            ["stickyBar", "Show the sticky buy bar at the bottom while scrolling"],
+          ] as const).map(([key, text]) => (
+            <label key={key} className="flex items-center gap-2 text-sm">
+              <input type="checkbox" checked={content.display[key]} onChange={(e) => set({ display: { ...content.display, [key]: e.target.checked } })} className="size-4 accent-[var(--primary)]" />
+              {text}
+            </label>
+          ))}
+        </div>
       </Section>
 
       <Section title="Top bar & countdown" hint="Announcement strip and a real offer deadline">
@@ -230,17 +281,88 @@ export function LandingEditor({ page, products, offers }: { page: Page; products
         })()}
       </Section>
 
+      <Section title="Labels & small text" hint="Headings, small captions and button texts — empty uses the default shown">
+        <div className="grid gap-3 sm:grid-cols-2">
+          {([
+            ["heroTrust", "Hero: line under the button"],
+            ["countdown", "Countdown text"],
+            ["insideEyebrow", "What's inside: small heading"],
+            ["bonusesEyebrow", "Bonuses: small heading"],
+            ["bonusTag", "Bonus card tag"],
+            ["bonusWorth", "Bonus “worth” text"],
+            ["bonusFree", "Bonus “free” text"],
+            ["testimonialsEyebrow", "Testimonials: small heading"],
+            ["valueTitle", "Value summary: title"],
+            ["valueIncluded", "Value summary: included line"],
+            ["valueTotal", "Value summary: “total value”"],
+            ["valueToday", "Value summary: “today”"],
+            ["faqEyebrow", "FAQ: small heading"],
+            ["faqTitle", "FAQ: title"],
+            ["offersEyebrow", "Packs: small heading"],
+            ["offersTitle", "Packs: title (several packs)"],
+            ["offersTitleSingle", "Packs: title (one pack)"],
+            ["comboButton", "Combo pack button"],
+            ["offersNote", "Packs: note under the cards"],
+          ] as const).map(([key, text]) => (
+            <Field key={key} label={text}>
+              <TextInput
+                maxLength={200}
+                value={content.labels[key] ?? ""}
+                placeholder={DEFAULT_LABELS[key] || "Secure checkout on thealphamakerx.in · UPI, cards & net banking · Instant download"}
+                onChange={(e) => setLabel(key, e.target.value)}
+              />
+            </Field>
+          ))}
+        </div>
+      </Section>
+
       <Section title="Closing" hint="Last push after the checkout">
         <Field label="Title"><TextInput value={content.closingTitle} onChange={(e) => set({ closingTitle: e.target.value })} /></Field>
         <Field label="Text"><TextArea rows={3} value={content.closingText} onChange={(e) => set({ closingText: e.target.value })} /></Field>
       </Section>
+
+    </div>
+
+      {preview && (
+        <aside className="hidden xl:block">
+          <div className="sticky top-4 flex flex-col gap-2">
+            <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
+              <span>Preview {dirty && "· save to see changes"}</span>
+              <div className="flex gap-1">
+                {(["mobile", "desktop"] as const).map((w) => (
+                  <button key={w} type="button" aria-pressed={previewWidth === w} onClick={() => setPreviewWidth(w)}
+                    className={cn("rounded px-2 py-1", previewWidth === w ? "bg-accent text-accent-foreground" : "hover:text-foreground")}>
+                    {w === "mobile" ? "Phone" : "Desktop"}
+                  </button>
+                ))}
+                <button type="button" aria-label="Reload preview" onClick={() => setPreviewKey((k) => k + 1)} className="rounded p-1 hover:text-foreground"><RotateCw className="size-3.5" /></button>
+              </div>
+            </div>
+            <div className="h-[calc(100vh-7rem)] overflow-hidden rounded-2xl border border-border bg-background">
+              {/* Desktop preview renders at 1280px and is scaled down to fit the panel. */}
+              <iframe
+                key={previewKey}
+                src={`/lp/${savedSlug}`}
+                title="Landing page preview"
+                className="origin-top-left border-0"
+                style={previewWidth === "mobile"
+                  ? { width: "100%", height: "100%" }
+                  : { width: 1280, height: "calc((100vh - 7rem) / 0.4)", transform: "scale(0.4)" }}
+              />
+            </div>
+          </div>
+        </aside>
+      )}
 
       <div className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-background/95 px-4 py-3 backdrop-blur left-60">
         <div className="mx-auto flex max-w-4xl flex-wrap items-center gap-2">
           <span className="mr-auto text-xs text-muted-foreground">
             {meta.isActive ? "Published" : "Draft"}{dirty ? " · unsaved changes" : ""}
           </span>
-          <a href={`/lp/${page.slug}`} target="_blank" rel="noreferrer" className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border px-3 text-sm hover:bg-secondary/40">
+          <button type="button" onClick={() => setPreview((p) => !p)} className="hidden h-9 items-center gap-1.5 rounded-lg border border-border px-3 text-sm hover:bg-secondary/40 xl:inline-flex">
+            {preview ? <PanelRightClose className="size-4" /> : <PanelRightOpen className="size-4" />} {preview ? "Hide preview" : "Show preview"}
+          </button>
+          <a href={`/lp/${savedSlug}`} target="_blank" rel="noreferrer" className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border px-3 text-sm hover:bg-secondary/40">
             {meta.isActive ? "View" : "Preview"} <ExternalLink className="size-3.5" />
           </a>
           <Button variant="ghost" className="text-destructive" onClick={remove}>Delete</Button>
