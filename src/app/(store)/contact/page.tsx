@@ -28,7 +28,7 @@ export default function ContactPage() {
         </span>
         <h1 className="mt-3 text-3xl font-semibold tracking-tight md:text-4xl">Contact Us</h1>
         <p className="mt-4 text-base text-muted-foreground">
-          Questions about an order, a refund, or a tracker before you buy? We usually reply
+          Questions about an order, a refund, or a guide before you buy? We usually reply
           within 24 hours. Email us or fill in the form below.
         </p>
       </section>

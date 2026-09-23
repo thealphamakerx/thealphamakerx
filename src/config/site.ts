@@ -2,7 +2,7 @@ export const siteConfig = {
   name: process.env.NEXT_PUBLIC_SITE_NAME ?? "The Alpha Maker X",
   url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://thealphamakerx.in",
   description:
-    "Kerala's #1 confidence and self-development coaching for men — practical, no-fluff digital guides on dating, fitness, and relationships, delivered instantly.",
+    "Straight-talking guides for men on dating, attraction and understanding women — practical, no-fluff ebooks delivered instantly.",
   contactEmail: "thealphamakerx@gmail.com",
   location: "Kochi, Kerala, India",
 
@@ -14,8 +14,8 @@ export const siteConfig = {
   instagramUrl: "https://instagram.com/thealphamakerx",
   youtubeUrl: "https://youtube.com/@thealphamakerx",
 
-  eyebrow: "Kerala's #1 Confidence Coach for Men",
-  heroHeadline: "Become the Most Confident Version of Yourself",
+  eyebrow: "Dating & attraction guides for men",
+  heroHeadline: "Stop Guessing. Start Understanding Women.",
   heroSubheadline:
-    "On a mission to help 1,000,000 men build unshakable confidence, real discipline, and the life, body, and relationships they actually want — one honest, practical guide at a time.",
+    "Practical, no-fluff guides on dating, attraction and relationships — the things most men are never taught, written for real men, not models or millionaires.",
 };

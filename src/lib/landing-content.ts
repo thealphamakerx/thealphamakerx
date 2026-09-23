@@ -46,10 +46,17 @@ export const DEFAULT_LABELS = {
   offersTitleSingle: "Start today",
   comboButton: "Get the combo",
   offersNote: "",
+  included: "Included",
+  youSave: "You save",
+  percentOff: "off",
 } as const;
 export type LabelKey = keyof typeof DEFAULT_LABELS;
 
+export const LANGUAGES = { en: "English", ml: "Malayalam (മലയാളം)" } as const;
+
 export const landingContentSchema = z.object({
+  /** Page language, for the lang attribute (screen readers, fonts, translation prompts). */
+  language: z.enum(["en", "ml"]).catch("en"),
   /** Top bar, e.g. "Launch price ends Sunday". */
   announcement: text(160),
   /** Real offer deadline (ISO). A countdown shows until then and disappears after. */

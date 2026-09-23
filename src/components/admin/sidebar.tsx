@@ -49,7 +49,7 @@ export function AdminSidebar({ name, email }: { name: string; email: string }) {
   }
 
   return (
-    <aside className="flex h-screen w-60 shrink-0 flex-col border-r border-border bg-background">
+    <aside className="sticky top-0 flex h-screen w-60 shrink-0 flex-col self-start border-r border-border bg-background">
       <div className="border-b border-border px-5 py-4">
         <Link href="/" aria-label="The Alpha Maker X home">
           <Image src="/logo.png" alt="The Alpha Maker X" width={170} height={29} className="site-logo" />

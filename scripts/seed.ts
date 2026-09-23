@@ -2,9 +2,9 @@
 // Requires DATABASE_URL / DATABASE_URL_UNPOOLED / BETTER_AUTH_SECRET etc.
 // already set (loads .env.local via dotenv, same as the app).
 //
-// Idempotent: products are upserted by slug, their feature bullets are
-// replaced wholesale, and any product whose slug is no longer in PRODUCTS is
-// deactivated rather than deleted — past buyers keep their download access.
+// Idempotent and non-destructive: creates the admin user and any missing
+// starter products. Existing products are never touched — edit them in
+// Admin → Products.
 import "./load-env.ts";
 import { auth, authPool } from "../src/lib/auth.ts";
 import { db } from "../src/prisma/db.ts";
@@ -142,51 +142,19 @@ async function seedCatalog() {
       isActive: true,
     };
 
+    // Products are managed in Admin → Products; this only creates missing ones
+    // so a re-seed never overwrites edits, images or which products are listed.
     const existing = await db.orm.public.Product.first({ slug: product.slug });
-
-    let productId: string;
     if (existing) {
-      await db.orm.public.Product.where({ id: existing.id }).update(fields);
-      productId = existing.id;
-      console.log(`Updated product "${product.name}".`);
-    } else {
-      const created = await db.orm.public.Product.create({ ...fields, slug: product.slug });
-      productId = created.id;
-      console.log(`Created product "${product.name}".`);
+      console.log(`Skipped "${product.name}" (already exists).`);
+      continue;
     }
 
-    // Features are positional copy, not user data — replace them wholesale so
-    // this file stays the single source of truth.
-    await db.orm.public.ProductFeature.where({ productId }).delete();
+    const created = await db.orm.public.Product.create({ ...fields, slug: product.slug });
     for (const [position, label] of product.features.entries()) {
-      await db.orm.public.ProductFeature.create({ productId, label, position });
+      await db.orm.public.ProductFeature.create({ productId: created.id, label, position });
     }
-
-    // Cover art lives in public/products/<slug>.svg — a 4:5 spreadsheet mockup
-    // in the product's accent colour. Next/image serves .svg unoptimized.
-    const coverUrl = `/products/${product.slug}.svg`;
-    const image = await db.orm.public.ProductImage.first({ productId });
-    if (image) {
-      await db.orm.public.ProductImage
-        .where({ id: image.id })
-        .update({ url: coverUrl, alt: `${product.name} — Excel spreadsheet preview` });
-    } else {
-      await db.orm.public.ProductImage.create({
-        productId,
-        url: coverUrl,
-        alt: `${product.name} — Excel spreadsheet preview`,
-      });
-    }
-  }
-
-  // Retire anything that's no longer in the catalog. Deactivated, never
-  // deleted: /api/access/[productId] still has to resolve it for past buyers.
-  const slugs = PRODUCTS.map((p) => p.slug);
-  const all = await db.orm.public.Product.all();
-  for (const product of all) {
-    if (slugs.includes(product.slug) || !product.isActive) continue;
-    await db.orm.public.Product.where({ id: product.id }).update({ isActive: false });
-    console.log(`Retired product "${product.name}" (kept for existing buyers).`);
+    console.log(`Created product "${product.name}" — add its images in Admin → Products.`);
   }
 }
 

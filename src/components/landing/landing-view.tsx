@@ -36,9 +36,9 @@ type Loaded = NonNullable<Awaited<ReturnType<typeof loadLanding>>>;
 
 function Section({ id, eyebrow, title, children, className = "" }: { id?: string; eyebrow?: string; title?: string; children: React.ReactNode; className?: string }) {
   return (
-    <section id={id} className={`mx-auto w-full max-w-3xl px-5 py-14 sm:py-20 ${className}`}>
+    <section id={id} className={`mx-auto w-full max-w-3xl px-4 py-10 sm:px-5 sm:py-20 ${className}`}>
       {eyebrow && <p className="lp-eyebrow mb-3 text-center">{eyebrow}</p>}
-      {title && <h2 className="lp-heading mb-10 text-center">{title}</h2>}
+      {title && <h2 className="lp-heading mb-6 text-center sm:mb-10">{title}</h2>}
       {children}
     </section>
   );
@@ -175,12 +175,12 @@ export function LandingView({ page, data }: { page: LandingPageRecord; data: Loa
             {content.bonuses.map((b, i) => (
               <li key={`${b.title}-${i}`} className="flex justify-between gap-4 py-3">
                 <span className="flex items-start gap-2">{check}{b.title}</span>
-                <span className="shrink-0 tabular-nums text-muted-foreground">{b.value > 0 ? formatPrice(b.value) : "Included"}</span>
+                <span className="shrink-0 tabular-nums text-muted-foreground">{b.value > 0 ? formatPrice(b.value) : t("included")}</span>
               </li>
             ))}
             <li className="flex justify-between gap-4 py-3 text-sm text-muted-foreground">
               <span>{t("valueIncluded")}</span>
-              <span>Included</span>
+              <span>{t("included")}</span>
             </li>
           </ul>
           <div className="flex flex-col items-center gap-1 text-center">
@@ -245,7 +245,7 @@ export function LandingView({ page, data }: { page: LandingPageRecord; data: Loa
                     <span className="text-3xl font-semibold tabular-nums">{formatPrice(pack.price)}</span>
                     {saved > 0 && <span className="text-muted-foreground line-through tabular-nums">{formatPrice(pack.compareAt!)}</span>}
                   </div>
-                  {saved > 0 && <span className="text-sm text-success">You save {formatPrice(saved)} ({Math.round((saved / pack.compareAt!) * 100)}% off)</span>}
+                  {saved > 0 && <span className="text-sm text-success">{t("youSave")} {formatPrice(saved)} ({Math.round((saved / pack.compareAt!) * 100)}% {t("percentOff")})</span>}
                 </div>
                 <CheckoutLink href={checkoutHref(pack)} className="lp-cta h-12 w-full px-6 text-base">
                   {pack.kind === "offer" ? t("comboButton") : cta}
@@ -270,7 +270,7 @@ export function LandingView({ page, data }: { page: LandingPageRecord; data: Loa
   };
 
   return (
-    <div className="lp flex flex-1 flex-col pb-20">
+    <div className="lp flex flex-1 flex-col pb-20" lang={content.language}>
       <LandingTracker slug={page.slug} enabled={page.isActive} />
       {(content.announcement || endsAt) && (
         <div className="lp-announcement px-4 py-2.5 text-center text-xs font-semibold uppercase tracking-[0.12em] sm:text-sm">
@@ -286,8 +286,8 @@ export function LandingView({ page, data }: { page: LandingPageRecord; data: Loa
 
       {/* Hero — always first */}
       <header className="lp-hero relative overflow-hidden">
-        <div className="mx-auto grid w-full max-w-5xl items-center gap-10 px-5 py-12 sm:py-20 md:grid-cols-[1fr_0.8fr]">
-          <div className="flex flex-col gap-5 text-center md:text-left">
+        <div className="mx-auto grid w-full max-w-5xl items-center gap-8 px-4 py-8 sm:gap-10 sm:px-5 sm:py-20 md:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)]">
+          <div className="flex min-w-0 flex-col gap-4 text-center sm:gap-5 md:text-left">
             {content.eyebrow && <p className="lp-eyebrow">{content.eyebrow}</p>}
             <h1 className="lp-title">{content.headline || product.name}</h1>
             {content.subheadline && <p className="text-base whitespace-pre-line text-muted-foreground sm:text-lg">{content.subheadline}</p>}
@@ -334,8 +334,10 @@ export function LandingView({ page, data }: { page: LandingPageRecord; data: Loa
               />
             </div>
           ) : cover && (
-            <div className="lp-cover relative mx-auto aspect-[4/5] w-full max-w-sm overflow-hidden rounded-2xl">
-              <SmartImage src={cover.url} alt={cover.alt ?? product.name} fill priority sizes="(min-width: 768px) 384px, 80vw" className="object-cover" />
+            // Natural aspect ratio: portrait book covers and 16:9 banners both show uncropped.
+            <div className="lp-cover mx-auto w-full max-w-xl overflow-hidden rounded-2xl">
+              {/* eslint-disable-next-line @next/next/no-img-element -- cover of unknown aspect; ImageKit resizes it */}
+              <img src={withTransform(cover.url, "w-1200")} alt={cover.alt ?? product.name} fetchPriority="high" className="block h-auto w-full" />
             </div>
           )}
         </div>

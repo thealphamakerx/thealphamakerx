@@ -1,10 +1,10 @@
-import { ShieldCheck, Zap, Star, Users } from "lucide-react";
+import { ShieldCheck, Zap, Lock, Smartphone } from "lucide-react";
 
 const ITEMS = [
-  { icon: Zap, label: "Instant Access" },
-  { icon: ShieldCheck, label: "Secure Payment" },
-  { icon: Star, label: "5-Star Rated" },
-  { icon: Users, label: "1000s of Members" },
+  { icon: Zap, label: "Instant Download" },
+  { icon: ShieldCheck, label: "Secure Cashfree Payment" },
+  { icon: Lock, label: "Private & Discreet" },
+  { icon: Smartphone, label: "Read on Any Device" },
 ];
 
 export function TrustBar() {

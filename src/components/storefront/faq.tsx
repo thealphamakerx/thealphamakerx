@@ -8,34 +8,39 @@ import { siteConfig } from "@/config/site";
 
 const FAQS = [
   {
-    question: "How do I get the tracker after I pay?",
+    question: "How do I get my guide after I pay?",
     answer:
-      "Access is instant. As soon as your payment is confirmed by Cashfree, a download link unlocks on your order confirmation page, by email, and under My Orders — no waiting, no shipping.",
+      "Instantly. As soon as Cashfree confirms your payment, the download unlocks on your order confirmation page, the link is emailed to you, and it stays under My Orders — no waiting, no shipping.",
   },
   {
-    question: "What format are the trackers in?",
+    question: "What format are the guides in?",
     answer:
-      "Every tracker is a downloadable Excel spreadsheet (.xlsx). It opens in Microsoft Excel, Google Sheets, Numbers, or any other spreadsheet app — on your phone, tablet, or laptop — and it's yours permanently once purchased.",
+      "Every guide is a downloadable ebook you can read on your phone, tablet or laptop. It's yours to keep once purchased.",
   },
   {
-    question: "Do I need to know Excel to use them?",
+    question: "Is my purchase private?",
     answer:
-      "No. Every sheet is set up for you — you type your numbers into the coloured input cells and the charts, totals, and dashboards update themselves. All the formulas are already built in.",
+      "Yes. Your download link goes only to the email you enter at checkout, and nothing is shipped to your address. Payments show up through Cashfree, not with the guide's title.",
+  },
+  {
+    question: "I don't have much experience with women. Are these for me?",
+    answer:
+      "Yes. The guides are written for ordinary men — you don't need looks, money or a long dating history to use them. They start from the basics and build step by step.",
   },
   {
     question: "Is payment safe?",
     answer:
-      `All payments are processed securely through Cashfree. ${siteConfig.name} never sees or stores your card, UPI, or bank details — see our Privacy Policy for details.`,
-  },
-  {
-    question: "Can I get a refund?",
-    answer:
-      "Yes — see our Refund & Cancellation Policy for the full terms. Because these are instant-access digital products, refund eligibility has some conditions, which are laid out clearly there.",
+      `All payments are processed securely through Cashfree — UPI, cards and net banking. ${siteConfig.name} never sees or stores your card, UPI, or bank details.`,
   },
   {
     question: "Do I need to create an account to buy?",
     answer:
-      "No — there are no accounts. You check out with just your email, and get your download link on the confirmation page and by email. You can see all your purchases any time under My Orders.",
+      "No — there are no accounts. You check out with just your email, and can see all your purchases any time under My Orders.",
+  },
+  {
+    question: "Can I get a refund?",
+    answer:
+      "See our Refund & Cancellation Policy for the full terms. Because these are instant-access digital products, refund eligibility has some conditions, which are laid out clearly there.",
   },
 ];
 

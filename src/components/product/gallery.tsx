@@ -16,7 +16,7 @@ export function Gallery({
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="relative aspect-4/5 w-full overflow-hidden rounded-2xl bg-muted">
+      <div className="relative aspect-video w-full overflow-hidden rounded-2xl bg-muted">
         {active ? (
           <SmartImage
             src={active.url}

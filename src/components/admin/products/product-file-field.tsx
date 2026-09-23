@@ -1,16 +1,10 @@
 "use client";
 
 import { useRef, useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Upload } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { FileDown, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { toast } from "@/components/ui/toast";
-import { formatPrice } from "@/lib/pricing";
-import { ProductDetailsEditor } from "./product-details-editor";
 
 // Mirrors MAX_UPLOAD_BYTES in lib/storage (server-only module); the server
 // re-checks both before signing and after the upload lands.
@@ -40,47 +34,22 @@ function putFile(
   });
 }
 
-export function ProductAccessRow({
+/** The file buyers download: upload to private object storage, or link to an external file. */
+export function ProductFileField({
   id,
-  slug,
-  name,
-  price,
-  isActive,
-  digitalAccessUrl,
   digitalFileName,
-  details,
+  digitalAccessUrl,
+  onLinkChange,
 }: {
   id: string;
-  slug: string;
-  name: string;
-  price: number;
-  isActive: boolean;
-  digitalAccessUrl: string | null;
   digitalFileName: string | null;
-  details: React.ComponentProps<typeof ProductDetailsEditor>["initial"];
+  digitalAccessUrl: string;
+  onLinkChange: (url: string) => void;
 }) {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [url, setUrl] = useState(digitalAccessUrl ?? "");
-  const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
-
-  async function handleSaveUrl() {
-    setSaving(true);
-    const res = await fetch(`/api/admin/products/${id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ digitalAccessUrl: url }),
-    });
-    setSaving(false);
-
-    if (res.ok) {
-      toast.add({ title: "Link saved", type: "success" });
-    } else {
-      toast.add({ title: "Could not save link", type: "error" });
-    }
-  }
 
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -148,56 +117,29 @@ export function ProductAccessRow({
   }
 
   return (
-    <Card>
-      <CardContent className="flex flex-col gap-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Link href={`/products/${slug}`} target="_blank" className="font-medium hover:underline">
-              {name}
-            </Link>
-            {!isActive && <Badge variant="secondary">Retired</Badge>}
-          </div>
-          <span className="font-medium">{formatPrice(price)}</span>
+    <div className="flex flex-col gap-3">
+      <div className="flex flex-wrap items-center gap-3 rounded-xl border border-border p-3">
+        <FileDown className="size-5 shrink-0 text-muted-foreground" aria-hidden="true" />
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-sm font-medium">{digitalFileName ?? "No file uploaded"}</p>
+          <p className="text-xs text-muted-foreground">PDF, ZIP, Excel or CSV · up to 500 MB · private, served only to buyers</p>
         </div>
-
-        <div className="flex flex-wrap items-center gap-2">
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            disabled={uploading}
-            onClick={() => fileInputRef.current?.click()}
-          >
-            <Upload className="size-3.5" />
-            {uploading ? `Uploading… ${progress}%` : "Upload .xlsx / .zip (max 500MB)"}
-          </Button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".xlsx,.xlsm,.xls,.csv,.pdf,.zip"
-            onChange={handleFileChange}
-            disabled={uploading}
-            className="hidden"
-          />
-          {digitalFileName && (
-            <Badge variant="secondary">{digitalFileName}</Badge>
-          )}
-        </div>
-
-        <div className="flex gap-2">
-          <Input
-            placeholder="Or paste an external link (Google Sheets, Drive, Gumroad, etc.)"
-            value={url}
-            onChange={(e) => setUrl(e.target.value)}
-            className="h-8 text-xs"
-          />
-          <Button type="button" size="sm" variant="outline" disabled={saving} onClick={handleSaveUrl}>
-            {saving ? "Saving…" : "Save"}
-          </Button>
-        </div>
-
-        <ProductDetailsEditor id={id} initial={details} />
-      </CardContent>
-    </Card>
+        <Button type="button" size="sm" variant="outline" disabled={uploading} onClick={() => fileInputRef.current?.click()}>
+          <Upload className="size-3.5" />
+          {uploading ? `Uploading… ${progress}%` : digitalFileName ? "Replace file" : "Upload file"}
+        </Button>
+        <input ref={fileInputRef} type="file" accept=".xlsx,.xlsm,.xls,.csv,.pdf,.zip" onChange={handleFileChange} disabled={uploading} className="hidden" />
+      </div>
+      <label className="flex flex-col gap-1.5">
+        <span className="text-xs font-medium">Or an external download link (used when no file is uploaded)</span>
+        <input
+          type="url"
+          value={digitalAccessUrl}
+          onChange={(e) => onLinkChange(e.target.value)}
+          placeholder="https://drive.google.com/…"
+          className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"
+        />
+      </label>
+    </div>
   );
 }

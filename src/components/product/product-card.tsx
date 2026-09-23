@@ -31,7 +31,7 @@ export function ProductCard({
   return (
     <div className="product-card flex flex-col gap-4 rounded-2xl border border-border p-5">
       <Link href={`/products/${slug}`} className="group flex flex-col gap-3">
-        <div className="relative aspect-4/5 w-full overflow-hidden rounded-2xl bg-muted">
+        <div className="relative aspect-video w-full overflow-hidden rounded-2xl bg-muted">
           {imageUrl ? (
             <SmartImage
               src={imageUrl}

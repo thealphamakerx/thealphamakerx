@@ -6,7 +6,7 @@ import { ArrowDown, ArrowUp, ChevronDown, ExternalLink, Eye, EyeOff, PanelRightC
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/toast";
 import { formatPrice } from "@/lib/pricing";
-import { DEFAULT_LABELS, SECTION_NAMES, sectionOrder, type LabelKey, type LandingContent } from "@/lib/landing-content";
+import { DEFAULT_LABELS, LANGUAGES, SECTION_NAMES, sectionOrder, type LabelKey, type LandingContent } from "@/lib/landing-content";
 import { cn } from "@/lib/utils";
 import { Field, LinesField, ProductPicker, RepeatableList, RupeeInput, TextArea, TextInput, inputClass, slugify } from "./form-fields";
 import { MediaField } from "@/components/media/media-field";
@@ -103,6 +103,11 @@ export function LandingEditor({ page, products, offers }: { page: Page; products
             </select>
           </Field>
         </div>
+        <Field label="Page language" hint="Sets the language for browsers and screen readers. Malayalam pages use a Malayalam font.">
+          <select className={inputClass} value={content.language} onChange={(e) => set({ language: e.target.value as LandingContent["language"] })}>
+            {Object.entries(LANGUAGES).map(([key, name]) => <option key={key} value={key}>{name}</option>)}
+          </select>
+        </Field>
         <Field
           label="Own domain (optional)"
           hint="e.g. attractwomen.me. Add the domain to your hosting project and point its DNS there. Buyers are sent to checkout on the main store, so no Cashfree changes are needed."
@@ -303,6 +308,9 @@ export function LandingEditor({ page, products, offers }: { page: Page; products
             ["offersTitleSingle", "Packs: title (one pack)"],
             ["comboButton", "Combo pack button"],
             ["offersNote", "Packs: note under the cards"],
+            ["included", "“Included” text"],
+            ["youSave", "“You save” text"],
+            ["percentOff", "“off” (as in 50% off)"],
           ] as const).map(([key, text]) => (
             <Field key={key} label={text}>
               <TextInput
