@@ -2,10 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSessionCookie } from "better-auth/cookies";
 import { isMainHost, normalizeDomain } from "@/lib/hosts";
 
-// A landing-page domain serves only the page itself and its tracking endpoint.
-// Buying, orders, legal pages and the shop all live on the main store, so
-// payments only ever run on the main (Cashfree-whitelisted) domain.
-const LANDING_PATHS = ["/api/track"];
+// A landing-page domain serves its own page at "/", any landing page at /lp/…,
+// and the tracking endpoint. Buying, orders, legal pages and the shop all live
+// on the main store, so payments only ever run on the main (Cashfree-whitelisted) domain.
+const LANDING_PATHS = ["/api/track", "/lp"];
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;

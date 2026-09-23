@@ -30,7 +30,9 @@ export default async function CheckoutPage({ searchParams }: PageProps<"/checkou
   if (!offer && !product) {
     return (
       <main className="flex flex-1 flex-col items-center justify-center gap-4 px-6 py-16 text-center">
-        <p className="text-sm text-muted-foreground">Choose a product to check out.</p>
+        <p className="text-sm text-muted-foreground">
+          {landing || one("product") ? "This product isn't available right now." : "Choose a product to check out."}
+        </p>
         <Link href="/shop" className={buttonVariants()}>Browse Products</Link>
       </main>
     );
