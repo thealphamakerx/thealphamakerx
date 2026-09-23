@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
+import { SmartImage } from "@/components/media/smart-image";
 import { cn } from "@/lib/utils";
 
 export function Gallery({
@@ -18,7 +18,7 @@ export function Gallery({
     <div className="flex flex-col gap-3">
       <div className="relative aspect-4/5 w-full overflow-hidden rounded-2xl bg-muted">
         {active ? (
-          <Image
+          <SmartImage
             src={active.url}
             alt={active.alt ?? productName}
             fill
@@ -45,7 +45,7 @@ export function Gallery({
                 i === selected && "ring-2 ring-primary"
               )}
             >
-              <Image
+              <SmartImage
                 src={image.url}
                 alt={image.alt ?? productName}
                 fill

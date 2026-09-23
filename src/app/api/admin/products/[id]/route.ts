@@ -19,8 +19,8 @@ export async function PATCH(
     return NextResponse.json({ error: "Invalid product fields" }, { status: 400 });
   }
 
-  // Feature bullets live in their own table — pull them out of the column set.
-  const { features, ...fields } = parsed.data;
+  // Feature bullets and images live in their own tables — pull them out of the column set.
+  const { features, images, ...fields } = parsed.data;
 
   if (Object.keys(fields).length > 0) {
     await db.orm.public.Product.where({ id }).update(fields);
@@ -30,6 +30,13 @@ export async function PATCH(
     await db.orm.public.ProductFeature.where({ productId: id }).delete();
     for (const [position, label] of features.entries()) {
       await db.orm.public.ProductFeature.create({ productId: id, label, position });
+    }
+  }
+
+  if (images) {
+    await db.orm.public.ProductImage.where({ productId: id }).delete();
+    for (const [position, image] of images.entries()) {
+      await db.orm.public.ProductImage.create({ productId: id, url: image.url, alt: image.alt ?? undefined, position });
     }
   }
 

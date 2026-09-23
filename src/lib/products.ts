@@ -8,6 +8,7 @@ async function withCardData(products: Awaited<ReturnType<typeof db.orm.public.Pr
   const [images, ratings] = await Promise.all([
     db.orm.public.ProductImage
       .where((image) => image.productId.in(productIds))
+      .orderBy((image) => image.position.asc())
       .select("productId", "url")
       .all(),
     db.orm.public.Review
@@ -76,7 +77,7 @@ export const getProductBySlug = cache(async (slug: string) => {
   if (!product) return null;
 
   const [images, features, ratingSummary] = await Promise.all([
-    db.orm.public.ProductImage.where({ productId: product.id }).all(),
+    db.orm.public.ProductImage.where({ productId: product.id }).orderBy((image) => image.position.asc()).all(),
     db.orm.public.ProductFeature
       .where({ productId: product.id })
       .orderBy((f) => f.position.asc())

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
+import { SmartImage } from "@/components/media/smart-image";
 import { useRouter } from "next/navigation";
 import Script from "next/script";
 import { Check, Lock, Plus, ShieldCheck, Zap } from "lucide-react";
@@ -237,7 +237,7 @@ export function CheckoutPanel({
             return (
               <div key={addOn.id} className={cn("flex items-center gap-3 rounded-2xl border p-3 transition-colors", added ? "border-primary bg-accent/30" : "border-border")}>
                 <div className="relative size-14 shrink-0 overflow-hidden rounded-xl bg-muted">
-                  {addOn.imageUrl && <Image src={addOn.imageUrl} alt="" fill sizes="56px" className="object-cover" />}
+                  {addOn.imageUrl && <SmartImage src={addOn.imageUrl} alt="" fill sizes="56px" className="object-cover" />}
                 </div>
                 <div className="flex min-w-0 flex-1 flex-col">
                   <span className="text-sm font-medium">{addOn.name}</span>

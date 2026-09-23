@@ -18,6 +18,10 @@ export const landingContentSchema = z.object({
   headline: text(200),
   subheadline: text(600),
   heroBullets: list(text(160), 8),
+  /** Replaces the product cover in the hero. */
+  heroImageUrl: text(500),
+  /** A video (e.g. a sales video) shown in the hero instead of the image. */
+  heroVideoUrl: text(500),
   ctaLabel: text(40),
 
   painTitle: text(160),
@@ -30,10 +34,10 @@ export const landingContentSchema = z.object({
   inside: list(z.object({ title: text(160), description: text(600) }), 30),
 
   bonusesTitle: text(160),
-  bonuses: list(z.object({ title: text(160), description: text(600), value: z.number().int().min(0).max(10_000_000).catch(0) }), 10),
+  bonuses: list(z.object({ title: text(160), description: text(600), value: z.number().int().min(0).max(10_000_000).catch(0), imageUrl: text(500) }), 10),
 
   testimonialsTitle: text(160),
-  testimonials: list(z.object({ name: text(80), text: text(1000), imageUrl: text(500) }), 30),
+  testimonials: list(z.object({ name: text(80), text: text(1000), imageUrl: text(500), videoUrl: text(500) }), 30),
 
   guaranteeTitle: text(160),
   guaranteeText: text(1000),

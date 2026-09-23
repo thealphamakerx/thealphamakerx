@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/toast";
 import { discountPercent, formatPrice } from "@/lib/pricing";
-import { Field, LinesField, RupeeInput, TextArea, TextInput } from "./form-fields";
+import { Field, LinesField, RepeatableList, RupeeInput, TextArea, TextInput } from "./form-fields";
+import { MediaField } from "@/components/media/media-field";
 
 type Details = {
   name: string;
@@ -14,6 +15,8 @@ type Details = {
   originalPrice: number | null;
   badge: string;
   features: string[];
+  images: { url: string; alt: string }[];
+  isActive: boolean;
 };
 
 /** Edit what buyers see on the product page: copy, pricing and the "What's inside" list. */
@@ -39,6 +42,8 @@ export function ProductDetailsEditor({ id, initial }: { id: string; initial: Det
         originalPrice: d.originalPrice,
         badge: d.badge.trim() || null,
         features: d.features.map((f) => f.trim()).filter(Boolean),
+        images: d.images.filter((i) => i.url.trim()).map((i) => ({ url: i.url.trim(), alt: i.alt.trim() || null })),
+        isActive: d.isActive,
       }),
     });
     setSaving(false);
@@ -63,7 +68,24 @@ export function ProductDetailsEditor({ id, initial }: { id: string; initial: Det
         <Field label="Badge" hint="e.g. Bestseller, New"><TextInput maxLength={30} value={d.badge} onChange={(e) => set({ badge: e.target.value })} /></Field>
       </div>
       <Field label="Description"><TextArea rows={5} value={d.description} onChange={(e) => set({ description: e.target.value })} /></Field>
+      <RepeatableList
+        label="Images — the first one is the cover"
+        items={d.images}
+        onChange={(images) => set({ images })}
+        empty={() => ({ url: "", alt: "" })}
+        addLabel="Add image"
+        render={(item, update) => (
+          <>
+            <MediaField kind="image" folder="products" value={item.url} onChange={(url) => update({ url })} />
+            <TextInput placeholder="Alt text (describe the image)" maxLength={200} value={item.alt} onChange={(e) => update({ alt: e.target.value })} />
+          </>
+        )}
+      />
       <LinesField label="What's inside" hint="One point per line — shown as numbered cards on the product page" rows={6} value={d.features} onChange={(features) => set({ features })} />
+      <label className="flex items-center gap-2 text-sm">
+        <input type="checkbox" checked={d.isActive} onChange={(e) => set({ isActive: e.target.checked })} className="size-4 accent-[var(--primary)]" />
+        Listed in the store — untick to retire it (past buyers keep their downloads)
+      </label>
       {d.price !== null && <p className="text-xs text-muted-foreground">Buyers pay {formatPrice(d.price)}.</p>}
       <div className="flex gap-2">
         <Button type="submit" disabled={saving}>{saving ? "Saving…" : "Save"}</Button>

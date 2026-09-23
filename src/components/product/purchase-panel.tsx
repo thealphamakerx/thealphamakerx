@@ -1,4 +1,4 @@
-import Image from "next/image";
+import { SmartImage } from "@/components/media/smart-image";
 import Link from "next/link";
 import { Download, Infinity as Lifetime, Lock, Package, Zap } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
@@ -86,7 +86,7 @@ export function PurchasePanel({
                   <div className="flex -space-x-2">
                     {offer.items.slice(0, 4).map((item) => (
                       <span key={item.productId} className="relative size-9 overflow-hidden rounded-lg border-2 border-card bg-muted">
-                        {item.imageUrl && <Image src={item.imageUrl} alt="" fill sizes="36px" className="object-cover" />}
+                        {item.imageUrl && <SmartImage src={item.imageUrl} alt="" fill sizes="36px" className="object-cover" />}
                       </span>
                     ))}
                   </div>

@@ -1,4 +1,4 @@
-import Image from "next/image";
+import { SmartImage } from "@/components/media/smart-image";
 import Link from "next/link";
 import { discountPercent, formatPrice } from "@/lib/pricing";
 import { StarRating } from "@/components/shared/star-rating";
@@ -33,7 +33,7 @@ export function ProductCard({
       <Link href={`/products/${slug}`} className="group flex flex-col gap-3">
         <div className="relative aspect-4/5 w-full overflow-hidden rounded-2xl bg-muted">
           {imageUrl ? (
-            <Image
+            <SmartImage
               src={imageUrl}
               alt={name}
               fill

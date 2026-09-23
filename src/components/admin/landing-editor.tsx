@@ -8,6 +8,7 @@ import { toast } from "@/components/ui/toast";
 import { formatPrice } from "@/lib/pricing";
 import type { LandingContent } from "@/lib/landing";
 import { Field, LinesField, ProductPicker, RepeatableList, RupeeInput, TextArea, TextInput, inputClass, slugify } from "./form-fields";
+import { MediaField } from "@/components/media/media-field";
 
 type Page = { id: string; name: string; slug: string; productId: string; domain: string | null; isActive: boolean; content: LandingContent };
 type ProductOption = { id: string; name: string; price: number; isActive: boolean };
@@ -70,6 +71,12 @@ export function LandingEditor({ page, products, offers }: { page: Page; products
 
   return (
     <div className="flex flex-col gap-4 pb-24">
+      {products.find((p) => p.id === meta.productId)?.isActive === false && (
+        <p role="alert" className="rounded-2xl border border-destructive/40 bg-destructive/10 px-5 py-3 text-sm">
+          This page&apos;s product is retired, so checkout can&apos;t sell it. Re-list it under Products (Edit details → “Listed in the store”) before publishing.
+        </p>
+      )}
+
       <Section title="Page settings" hint="Name, address, product and domain" defaultOpen>
         <div className="grid gap-4 sm:grid-cols-3">
           <Field label="Page name (internal)"><TextInput value={meta.name} onChange={(e) => setM({ name: e.target.value })} /></Field>
@@ -104,6 +111,12 @@ export function LandingEditor({ page, products, offers }: { page: Page; products
         <Field label="Sub-headline"><TextArea rows={3} maxLength={600} value={content.subheadline} onChange={(e) => set({ subheadline: e.target.value })} /></Field>
         <LinesField label="Key benefits (bullets)" value={content.heroBullets} onChange={(heroBullets) => set({ heroBullets })} />
         <Field label="Button text"><TextInput maxLength={40} value={content.ctaLabel} placeholder="Get instant access" onChange={(e) => set({ ctaLabel: e.target.value })} /></Field>
+        <Field label="Hero image" hint="Replaces the product cover. Portrait (4:5) works best.">
+          <MediaField kind="image" folder="landing" value={content.heroImageUrl} onChange={(heroImageUrl) => set({ heroImageUrl })} />
+        </Field>
+        <Field label="Hero video (optional)" hint="A short sales video shown instead of the image. Vertical or horizontal both work.">
+          <MediaField kind="video" folder="landing" value={content.heroVideoUrl} onChange={(heroVideoUrl) => set({ heroVideoUrl })} />
+        </Field>
       </Section>
 
       <Section title="Pain points" hint="“Has this ever happened to you?” — problems the reader recognises">
@@ -139,31 +152,33 @@ export function LandingEditor({ page, products, offers }: { page: Page; products
           label="Bonuses"
           items={content.bonuses}
           onChange={(bonuses) => set({ bonuses })}
-          empty={() => ({ title: "", description: "", value: 0 })}
+          empty={() => ({ title: "", description: "", value: 0, imageUrl: "" })}
           addLabel="Add bonus"
           render={(item, update) => (
             <>
               <TextInput placeholder="Bonus title" value={item.title} onChange={(e) => update({ title: e.target.value })} />
               <TextArea rows={2} placeholder="What it is" value={item.description} onChange={(e) => update({ description: e.target.value })} />
               <Field label="Value (optional)"><RupeeInput value={item.value || null} onChange={(v) => update({ value: v ?? 0 })} /></Field>
+              <Field label="Image (optional)"><MediaField kind="image" folder="landing" value={item.imageUrl} onChange={(imageUrl) => update({ imageUrl })} /></Field>
             </>
           )}
         />
       </Section>
 
-      <Section title="Testimonials" hint="Real messages from buyers — screenshot URL and/or text">
+      <Section title="Testimonials" hint="Real messages from buyers — screenshots, videos and/or text">
         <Field label="Section title"><TextInput value={content.testimonialsTitle} placeholder="What readers say" onChange={(e) => set({ testimonialsTitle: e.target.value })} /></Field>
         <RepeatableList
           label="Testimonials"
           items={content.testimonials}
           onChange={(testimonials) => set({ testimonials })}
-          empty={() => ({ name: "", text: "", imageUrl: "" })}
+          empty={() => ({ name: "", text: "", imageUrl: "", videoUrl: "" })}
           addLabel="Add testimonial"
           render={(item, update) => (
             <>
               <TextInput placeholder="Name (or first name / initials)" value={item.name} onChange={(e) => update({ name: e.target.value })} />
               <TextArea rows={2} placeholder="What they said" value={item.text} onChange={(e) => update({ text: e.target.value })} />
-              <TextInput type="url" placeholder="Screenshot image URL (optional)" value={item.imageUrl} onChange={(e) => update({ imageUrl: e.target.value })} />
+              <Field label="Screenshot (optional)"><MediaField kind="image" folder="testimonials" value={item.imageUrl} onChange={(imageUrl) => update({ imageUrl })} /></Field>
+              <Field label="Video testimonial (optional)"><MediaField kind="video" folder="testimonials" value={item.videoUrl} onChange={(videoUrl) => update({ videoUrl })} /></Field>
             </>
           )}
         />
@@ -247,7 +262,7 @@ function cleanContent(c: LandingContent): LandingContent {
     forYou: lines(c.forYou),
     inside: c.inside.filter((i) => i.title.trim()),
     bonuses: c.bonuses.filter((b) => b.title.trim()),
-    testimonials: c.testimonials.filter((t) => t.text.trim() || t.imageUrl.trim()),
+    testimonials: c.testimonials.filter((t) => t.text.trim() || t.imageUrl.trim() || t.videoUrl.trim()),
     faqs: c.faqs.filter((f) => f.question.trim() && f.answer.trim()),
   };
 }

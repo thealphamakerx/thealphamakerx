@@ -14,6 +14,8 @@ export const productSchema = z.object({
   color: z.string().optional(),
   isActive: z.boolean().optional(),
   features: z.array(z.string().min(1)).optional(),
+  // Ordered gallery; the first image is the cover. Replaces the whole set.
+  images: z.array(z.object({ url: z.string().url().max(1000), alt: z.string().max(200).nullable().optional() })).max(12).optional(),
   digitalAccessUrl: z.string().url().optional(),
 });
 

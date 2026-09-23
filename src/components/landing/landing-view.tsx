@@ -1,4 +1,3 @@
-import Image from "next/image";
 import { Check, ChevronDown, Gift, ShieldCheck, Star, X } from "lucide-react";
 import { siteConfig } from "@/config/site";
 import { db } from "@/lib/db";
@@ -8,6 +7,8 @@ import { offerPack, productPack } from "@/lib/checkout-options";
 import { discountPercent, formatPrice } from "@/lib/pricing";
 import type { LandingContent } from "@/lib/landing";
 import { Countdown } from "./countdown";
+import { SmartImage } from "@/components/media/smart-image";
+import { videoPoster, withTransform } from "@/lib/media";
 import { StickyCta } from "./sticky-cta";
 import { CheckoutLink, LandingTracker } from "./tracking";
 
@@ -45,7 +46,7 @@ function Section({ id, eyebrow, title, children, className = "" }: { id?: string
 export function LandingView({ page, data }: { page: LandingPageRecord; data: Loaded }) {
   const { content } = page;
   const { product, images, ratingSummary, offers, features, endsAt } = data;
-  const cover = images[0];
+  const cover = content.heroImageUrl ? { url: content.heroImageUrl, alt: content.headline || product.name } : images[0];
   const percentOff = discountPercent(product.price, product.originalPrice);
   const cta = content.ctaLabel || "Get instant access";
   const inside = content.inside.length ? content.inside : features.map((f) => ({ title: f.label, description: "" }));
@@ -121,9 +122,20 @@ export function LandingView({ page, data }: { page: LandingPageRecord; data: Loa
               </p>
             )}
           </div>
-          {cover && (
+          {content.heroVideoUrl ? (
+            <div className="lp-cover mx-auto w-full max-w-md overflow-hidden rounded-2xl bg-black">
+              <video
+                src={content.heroVideoUrl}
+                poster={videoPoster(content.heroVideoUrl) ?? (cover ? withTransform(cover.url, "w-800") : undefined)}
+                controls
+                playsInline
+                preload="metadata"
+                className="max-h-[75vh] w-full"
+              />
+            </div>
+          ) : cover && (
             <div className="lp-cover relative mx-auto aspect-[4/5] w-full max-w-sm overflow-hidden rounded-2xl">
-              <Image src={cover.url} alt={cover.alt ?? product.name} fill priority sizes="(min-width: 768px) 384px, 80vw" className="object-cover" />
+              <SmartImage src={cover.url} alt={cover.alt ?? product.name} fill priority sizes="(min-width: 768px) 384px, 80vw" className="object-cover" />
             </div>
           )}
         </div>
@@ -175,7 +187,12 @@ export function LandingView({ page, data }: { page: LandingPageRecord; data: Loa
         <Section eyebrow="Included free" title={content.bonusesTitle || "Bonuses you get today"}>
           <div className="grid gap-4 sm:grid-cols-2">
             {content.bonuses.map((b, i) => (
-              <div key={`${b.title}-${i}`} className="lp-card lp-card-glow flex flex-col gap-2 p-5">
+              <div key={`${b.title}-${i}`} className="lp-card lp-card-glow flex flex-col gap-2 overflow-hidden p-5">
+                {b.imageUrl && (
+                  <div className="relative -mx-5 -mt-5 mb-2 aspect-video bg-muted">
+                    <SmartImage src={b.imageUrl} alt="" fill sizes="(min-width: 640px) 360px, 90vw" className="object-cover" />
+                  </div>
+                )}
                 <span className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-accent-foreground">
                   <Gift className="size-4" aria-hidden="true" /> Bonus #{i + 1}
                 </span>
@@ -193,9 +210,11 @@ export function LandingView({ page, data }: { page: LandingPageRecord; data: Loa
           <div className="columns-1 gap-4 sm:columns-2 [&>*]:mb-4">
             {content.testimonials.map((t, i) => (
               <figure key={`${t.name}-${i}`} className="lp-card break-inside-avoid overflow-hidden">
-                {t.imageUrl && (
-                  // eslint-disable-next-line @next/next/no-img-element -- admin-provided URLs from any host
-                  <img src={t.imageUrl} alt={t.name ? `Message from ${t.name}` : "Customer message"} loading="lazy" className="w-full" />
+                {t.videoUrl ? (
+                  <video src={t.videoUrl} poster={videoPoster(t.videoUrl)} controls playsInline preload="none" className="w-full bg-black" />
+                ) : t.imageUrl && (
+                  // eslint-disable-next-line @next/next/no-img-element -- screenshots keep their natural height; ImageKit resizes them
+                  <img src={withTransform(t.imageUrl, "w-720")} alt={t.name ? `Message from ${t.name}` : "Customer message"} loading="lazy" className="w-full" />
                 )}
                 {(t.text || t.name) && (
                   <figcaption className="flex flex-col gap-2 p-4">

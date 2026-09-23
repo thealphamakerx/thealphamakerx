@@ -8,12 +8,13 @@ export const dynamic = "force-dynamic";
 export default async function AdminProductsPage() {
   // Retired products are listed too — their files must stay reachable for past buyers.
   const { products } = await getAllProducts(1, { includeInactive: true });
-  const features = products.length
-    ? await db.orm.public.ProductFeature
-        .where((f) => f.productId.in(products.map((p) => p.id)))
-        .orderBy((f) => f.position.asc())
-        .all()
-    : [];
+  const ids = products.map((p) => p.id);
+  const [features, images] = ids.length
+    ? await Promise.all([
+        db.orm.public.ProductFeature.where((f) => f.productId.in(ids)).orderBy((f) => f.position.asc()).all(),
+        db.orm.public.ProductImage.where((i) => i.productId.in(ids)).orderBy((i) => i.position.asc()).all(),
+      ])
+    : [[], []];
 
   return (
     <div className="flex flex-col gap-6">
@@ -44,6 +45,8 @@ export default async function AdminProductsPage() {
                 originalPrice: product.originalPrice ?? null,
                 badge: product.badge ?? "",
                 features: features.filter((f) => f.productId === product.id).map((f) => f.label),
+                images: images.filter((i) => i.productId === product.id).map((i) => ({ url: i.url, alt: i.alt ?? "" })),
+                isActive: product.isActive,
               }}
             />
           ))}

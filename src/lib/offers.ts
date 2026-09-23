@@ -26,7 +26,7 @@ async function withItems(offers: OfferRow[], { activeProductsOnly }: { activePro
   const [products, images] = productIds.length
     ? await Promise.all([
         db.orm.public.Product.where((p) => p.id.in(productIds)).all(),
-        db.orm.public.ProductImage.where((i) => i.productId.in(productIds)).select("productId", "url").all(),
+        db.orm.public.ProductImage.where((i) => i.productId.in(productIds)).orderBy((i) => i.position.asc()).select("productId", "url").all(),
       ])
     : [[], []];
   const productById = new Map(products.map((p) => [p.id, p]));
