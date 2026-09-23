@@ -4,12 +4,12 @@ export const productSchema = z.object({
   name: z.string().min(1),
   shortName: z.string().min(1).optional(),
   slug: z.string().min(1),
-  description: z.string().optional(),
+  description: z.string().nullable().optional(),
   // Both in paise. `originalPrice` is the strike-through "was" price; it's
   // only rendered when it's higher than `price`.
   price: z.number().int().nonnegative(),
-  originalPrice: z.number().int().nonnegative().optional(),
-  badge: z.string().optional(),
+  originalPrice: z.number().int().nonnegative().nullable().optional(),
+  badge: z.string().nullable().optional(),
   iconName: z.string().optional(),
   color: z.string().optional(),
   isActive: z.boolean().optional(),

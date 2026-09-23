@@ -1,3 +1,4 @@
+import { db } from "@/lib/db";
 import { getAllProducts } from "@/lib/products";
 import { ProductAccessRow } from "@/components/admin/product-access-row";
 import { Card, CardContent } from "@/components/ui/card";
@@ -7,6 +8,12 @@ export const dynamic = "force-dynamic";
 export default async function AdminProductsPage() {
   // Retired products are listed too — their files must stay reachable for past buyers.
   const { products } = await getAllProducts(1, { includeInactive: true });
+  const features = products.length
+    ? await db.orm.public.ProductFeature
+        .where((f) => f.productId.in(products.map((p) => p.id)))
+        .orderBy((f) => f.position.asc())
+        .all()
+    : [];
 
   return (
     <div className="flex flex-col gap-6">
@@ -15,7 +22,7 @@ export default async function AdminProductsPage() {
       {products.length === 0 ? (
         <Card>
           <CardContent className="py-8 text-center text-sm text-muted-foreground">
-            No products yet — add some from the database while the product editor UI is built.
+            No products yet — add them with the seed script, then edit details and prices here.
           </CardContent>
         </Card>
       ) : (
@@ -30,6 +37,14 @@ export default async function AdminProductsPage() {
               isActive={product.isActive}
               digitalAccessUrl={product.digitalAccessUrl}
               digitalFileName={product.digitalFileName}
+              details={{
+                name: product.name,
+                description: product.description ?? "",
+                price: product.price,
+                originalPrice: product.originalPrice ?? null,
+                badge: product.badge ?? "",
+                features: features.filter((f) => f.productId === product.id).map((f) => f.label),
+              }}
             />
           ))}
         </div>

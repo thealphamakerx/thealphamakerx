@@ -1,7 +1,11 @@
 export function formatPrice(amountInPaise: number, currency = "INR") {
+  // Whole-rupee amounts read cleaner without ".00"; paise still show when present.
+  const whole = amountInPaise % 100 === 0;
   return new Intl.NumberFormat("en-IN", {
     style: "currency",
     currency,
+    minimumFractionDigits: whole ? 0 : 2,
+    maximumFractionDigits: whole ? 0 : 2,
   }).format(amountInPaise / 100);
 }
 

@@ -1,0 +1,983 @@
+[
+  {
+    "id": "table.landingEvent",
+    "label": "Create table \"landingEvent\"",
+    "summary": "Creates table \"landingEvent\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "landingEvent"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"landingEvent\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"landingEvent\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"landingEvent\"",
+        "sql": "CREATE TABLE \"public\".\"landingEvent\" (\n  \"country\" text,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"device\" text,\n  \"id\" text NOT NULL,\n  \"landingSlug\" text NOT NULL,\n  \"referrer\" text,\n  \"type\" text NOT NULL,\n  \"utmCampaign\" text,\n  \"utmContent\" text,\n  \"utmMedium\" text,\n  \"utmSource\" text,\n  \"visitorId\" text NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"landingEvent\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"landingEvent\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.landingPage",
+    "label": "Create table \"landingPage\"",
+    "summary": "Creates table \"landingPage\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "landingPage"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"landingPage\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"landingPage\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"landingPage\"",
+        "sql": "CREATE TABLE \"public\".\"landingPage\" (\n  \"content\" text DEFAULT '{}' NOT NULL,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"domain\" text,\n  \"id\" text NOT NULL,\n  \"isActive\" bool DEFAULT false NOT NULL,\n  \"name\" text NOT NULL,\n  \"productId\" text NOT NULL,\n  \"slug\" text NOT NULL,\n  \"updatedAt\" timestamptz NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"landingPage\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"landingPage\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.offer",
+    "label": "Create table \"offer\"",
+    "summary": "Creates table \"offer\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "offer"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"offer\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"offer\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"offer\"",
+        "sql": "CREATE TABLE \"public\".\"offer\" (\n  \"badge\" text,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"description\" text,\n  \"id\" text NOT NULL,\n  \"isActive\" bool DEFAULT true NOT NULL,\n  \"name\" text NOT NULL,\n  \"position\" int4 DEFAULT 0 NOT NULL,\n  \"price\" int4 NOT NULL,\n  \"slug\" text NOT NULL,\n  \"updatedAt\" timestamptz NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"offer\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"offer\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.offerItem",
+    "label": "Create table \"offerItem\"",
+    "summary": "Creates table \"offerItem\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "offerItem"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"offerItem\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"offerItem\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"offerItem\"",
+        "sql": "CREATE TABLE \"public\".\"offerItem\" (\n  \"id\" text NOT NULL,\n  \"offerId\" text NOT NULL,\n  \"position\" int4 DEFAULT 0 NOT NULL,\n  \"productId\" text NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"offerItem\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"offerItem\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.order.source",
+    "label": "Add column \"source\" to \"order\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "source",
+        "table": "order"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"source\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "order",
+          "source"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"source\"",
+        "sql": "ALTER TABLE \"public\".\"order\" ADD COLUMN \"source\" text"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"source\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "order",
+          "source"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.order.utmCampaign",
+    "label": "Add column \"utmCampaign\" to \"order\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "utmCampaign",
+        "table": "order"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"utmCampaign\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "order",
+          "utmCampaign"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"utmCampaign\"",
+        "sql": "ALTER TABLE \"public\".\"order\" ADD COLUMN \"utmCampaign\" text"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"utmCampaign\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "order",
+          "utmCampaign"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.order.utmContent",
+    "label": "Add column \"utmContent\" to \"order\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "utmContent",
+        "table": "order"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"utmContent\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "order",
+          "utmContent"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"utmContent\"",
+        "sql": "ALTER TABLE \"public\".\"order\" ADD COLUMN \"utmContent\" text"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"utmContent\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "order",
+          "utmContent"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.order.utmMedium",
+    "label": "Add column \"utmMedium\" to \"order\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "utmMedium",
+        "table": "order"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"utmMedium\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "order",
+          "utmMedium"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"utmMedium\"",
+        "sql": "ALTER TABLE \"public\".\"order\" ADD COLUMN \"utmMedium\" text"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"utmMedium\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "order",
+          "utmMedium"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.order.utmSource",
+    "label": "Add column \"utmSource\" to \"order\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "utmSource",
+        "table": "order"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"utmSource\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "order",
+          "utmSource"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"utmSource\"",
+        "sql": "ALTER TABLE \"public\".\"order\" ADD COLUMN \"utmSource\" text"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"utmSource\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "order",
+          "utmSource"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.order.visitorId",
+    "label": "Add column \"visitorId\" to \"order\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "visitorId",
+        "table": "order"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"visitorId\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "order",
+          "visitorId"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"visitorId\"",
+        "sql": "ALTER TABLE \"public\".\"order\" ADD COLUMN \"visitorId\" text"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"visitorId\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "order",
+          "visitorId"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.orderItem.offerId",
+    "label": "Add column \"offerId\" to \"orderItem\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "offerId",
+        "table": "orderItem"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"offerId\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "orderItem",
+          "offerId"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"offerId\"",
+        "sql": "ALTER TABLE \"public\".\"orderItem\" ADD COLUMN \"offerId\" text"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"offerId\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "orderItem",
+          "offerId"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.orderItem.offerName",
+    "label": "Add column \"offerName\" to \"orderItem\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "offerName",
+        "table": "orderItem"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"offerName\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "orderItem",
+          "offerName"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"offerName\"",
+        "sql": "ALTER TABLE \"public\".\"orderItem\" ADD COLUMN \"offerName\" text"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"offerName\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "orderItem",
+          "offerName"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.landingPage.landingPage_slug_key",
+    "label": "Add unique constraint on \"landingPage\" (slug)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "landingPage_slug_key",
+        "table": "landingPage"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"landingPage_slug_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "landingPage_slug_key",
+          "public",
+          "\"public\".\"landingPage\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"landingPage_slug_key\"",
+        "sql": "ALTER TABLE \"public\".\"landingPage\" ADD CONSTRAINT \"landingPage_slug_key\" UNIQUE (\"slug\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"landingPage_slug_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "landingPage_slug_key",
+          "public",
+          "\"public\".\"landingPage\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.landingPage.landingPage_domain_key",
+    "label": "Add unique constraint on \"landingPage\" (domain)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "landingPage_domain_key",
+        "table": "landingPage"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"landingPage_domain_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "landingPage_domain_key",
+          "public",
+          "\"public\".\"landingPage\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"landingPage_domain_key\"",
+        "sql": "ALTER TABLE \"public\".\"landingPage\" ADD CONSTRAINT \"landingPage_domain_key\" UNIQUE (\"domain\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"landingPage_domain_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "landingPage_domain_key",
+          "public",
+          "\"public\".\"landingPage\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.offer.offer_slug_key",
+    "label": "Add unique constraint on \"offer\" (slug)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "offer_slug_key",
+        "table": "offer"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"offer_slug_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "offer_slug_key",
+          "public",
+          "\"public\".\"offer\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"offer_slug_key\"",
+        "sql": "ALTER TABLE \"public\".\"offer\" ADD CONSTRAINT \"offer_slug_key\" UNIQUE (\"slug\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"offer_slug_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "offer_slug_key",
+          "public",
+          "\"public\".\"offer\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.offerItem.offerItem_offerId_productId_key",
+    "label": "Add unique constraint on \"offerItem\" (offerId, productId)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "offerItem_offerId_productId_key",
+        "table": "offerItem"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"offerItem_offerId_productId_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "offerItem_offerId_productId_key",
+          "public",
+          "\"public\".\"offerItem\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"offerItem_offerId_productId_key\"",
+        "sql": "ALTER TABLE \"public\".\"offerItem\" ADD CONSTRAINT \"offerItem_offerId_productId_key\" UNIQUE (\"offerId\", \"productId\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"offerItem_offerId_productId_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "offerItem_offerId_productId_key",
+          "public",
+          "\"public\".\"offerItem\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.landingEvent.landingEvent_landingSlug_createdAt_idx_82224d1c",
+    "label": "Create index \"landingEvent_landingSlug_createdAt_idx_82224d1c\" on \"landingEvent\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "landingEvent_landingSlug_createdAt_idx_82224d1c",
+        "table": "landingEvent"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"landingEvent_landingSlug_createdAt_idx_82224d1c\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"landingEvent_landingSlug_createdAt_idx_82224d1c\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"landingEvent_landingSlug_createdAt_idx_82224d1c\"",
+        "sql": "CREATE INDEX \"landingEvent_landingSlug_createdAt_idx_82224d1c\" ON \"public\".\"landingEvent\" (\"landingSlug\", \"createdAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"landingEvent_landingSlug_createdAt_idx_82224d1c\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"landingEvent_landingSlug_createdAt_idx_82224d1c\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.landingEvent.landingEvent_visitorId_idx_9d3ff46a",
+    "label": "Create index \"landingEvent_visitorId_idx_9d3ff46a\" on \"landingEvent\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "landingEvent_visitorId_idx_9d3ff46a",
+        "table": "landingEvent"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"landingEvent_visitorId_idx_9d3ff46a\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"landingEvent_visitorId_idx_9d3ff46a\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"landingEvent_visitorId_idx_9d3ff46a\"",
+        "sql": "CREATE INDEX \"landingEvent_visitorId_idx_9d3ff46a\" ON \"public\".\"landingEvent\" (\"visitorId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"landingEvent_visitorId_idx_9d3ff46a\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"landingEvent_visitorId_idx_9d3ff46a\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.landingPage.landingPage_productId_idx_5858600a",
+    "label": "Create index \"landingPage_productId_idx_5858600a\" on \"landingPage\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "landingPage_productId_idx_5858600a",
+        "table": "landingPage"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"landingPage_productId_idx_5858600a\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"landingPage_productId_idx_5858600a\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"landingPage_productId_idx_5858600a\"",
+        "sql": "CREATE INDEX \"landingPage_productId_idx_5858600a\" ON \"public\".\"landingPage\" (\"productId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"landingPage_productId_idx_5858600a\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"landingPage_productId_idx_5858600a\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.offerItem.offerItem_offerId_idx_18de2758",
+    "label": "Create index \"offerItem_offerId_idx_18de2758\" on \"offerItem\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "offerItem_offerId_idx_18de2758",
+        "table": "offerItem"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"offerItem_offerId_idx_18de2758\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"offerItem_offerId_idx_18de2758\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"offerItem_offerId_idx_18de2758\"",
+        "sql": "CREATE INDEX \"offerItem_offerId_idx_18de2758\" ON \"public\".\"offerItem\" (\"offerId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"offerItem_offerId_idx_18de2758\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"offerItem_offerId_idx_18de2758\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.offerItem.offerItem_productId_idx_5858600a",
+    "label": "Create index \"offerItem_productId_idx_5858600a\" on \"offerItem\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "offerItem_productId_idx_5858600a",
+        "table": "offerItem"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"offerItem_productId_idx_5858600a\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"offerItem_productId_idx_5858600a\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"offerItem_productId_idx_5858600a\"",
+        "sql": "CREATE INDEX \"offerItem_productId_idx_5858600a\" ON \"public\".\"offerItem\" (\"productId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"offerItem_productId_idx_5858600a\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"offerItem_productId_idx_5858600a\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.landingPage.landingPage_productId_fkey",
+    "label": "Add foreign key \"landingPage_productId_fkey\" on \"landingPage\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "landingPage_productId_fkey",
+        "table": "landingPage"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"landingPage_productId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "landingPage_productId_fkey",
+          "public",
+          "\"public\".\"landingPage\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"landingPage_productId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"landingPage\"\nADD CONSTRAINT \"landingPage_productId_fkey\"\nFOREIGN KEY (\"productId\")\nREFERENCES \"public\".\"product\" (\"id\")\nON DELETE RESTRICT"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"landingPage_productId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "landingPage_productId_fkey",
+          "public",
+          "\"public\".\"landingPage\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.offerItem.offerItem_offerId_fkey",
+    "label": "Add foreign key \"offerItem_offerId_fkey\" on \"offerItem\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "offerItem_offerId_fkey",
+        "table": "offerItem"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"offerItem_offerId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "offerItem_offerId_fkey",
+          "public",
+          "\"public\".\"offerItem\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"offerItem_offerId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"offerItem\"\nADD CONSTRAINT \"offerItem_offerId_fkey\"\nFOREIGN KEY (\"offerId\")\nREFERENCES \"public\".\"offer\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"offerItem_offerId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "offerItem_offerId_fkey",
+          "public",
+          "\"public\".\"offerItem\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.offerItem.offerItem_productId_fkey",
+    "label": "Add foreign key \"offerItem_productId_fkey\" on \"offerItem\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "offerItem_productId_fkey",
+        "table": "offerItem"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"offerItem_productId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "offerItem_productId_fkey",
+          "public",
+          "\"public\".\"offerItem\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"offerItem_productId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"offerItem\"\nADD CONSTRAINT \"offerItem_productId_fkey\"\nFOREIGN KEY (\"productId\")\nREFERENCES \"public\".\"product\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"offerItem_productId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "offerItem_productId_fkey",
+          "public",
+          "\"public\".\"offerItem\""
+        ]
+      }
+    ]
+  }
+]

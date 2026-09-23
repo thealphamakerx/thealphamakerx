@@ -236,6 +236,14 @@ model Order {
   customerPhone    String?
   refundedAmount   Int @default(0)
   lastPaymentSyncAt TimestamptzString?
+  // Landing page slug the order was placed from; null for the main store.
+  source           String?
+  // Ad attribution carried from the landing page to checkout (see landingEvent).
+  visitorId        String?
+  utmSource        String?
+  utmMedium        String?
+  utmCampaign      String?
+  utmContent       String?
 
   createdAt TimestamptzString @default(now())
   updatedAt temporal.updatedAtString()
@@ -251,6 +259,11 @@ model OrderItem {
   quantity    Int
   unitPrice   Int
   finalPrice  Int
+  // Set when the product was bought as part of a combo. The combo price is
+  // split across its products in proportion to their prices, so per-product
+  // revenue stays meaningful; the name is a snapshot for the order history.
+  offerId     String?
+  offerName   String?
 
   order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
@@ -310,4 +323,71 @@ model PaymentEmail {
   createdAt TimestamptzString @default(now())
   order Order @relation(fields: [orderId], references: [id], onDelete: Restrict)
   @@index([orderId])
+}
+
+// A combo: several products sold together at one price (in paise).
+model Offer {
+  id          String  @id @default(uuid())
+  name        String
+  slug        String  @unique
+  description String?
+  price       Int
+  badge       String?
+  isActive    Boolean @default(true)
+  position    Int     @default(0)
+
+  createdAt TimestamptzString @default(now())
+  updatedAt temporal.updatedAtString()
+}
+
+model OfferItem {
+  id        String @id @default(uuid())
+  offerId   String
+  productId String
+  position  Int    @default(0)
+
+  offer   Offer   @relation(fields: [offerId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([offerId, productId])
+  @@index([productId])
+}
+
+// A focused sales page for one product, optionally served on its own domain.
+// `content` is JSON validated by lib/landing (sections change without migrations).
+model LandingPage {
+  id        String  @id @default(uuid())
+  slug      String  @unique
+  name      String
+  productId String
+  domain    String? @unique
+  isActive  Boolean @default(false)
+  content   String  @default("{}")
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  createdAt TimestamptzString @default(now())
+  updatedAt temporal.updatedAtString()
+}
+
+// One tracked step of a landing-page visit: "view", "scroll" (read half the
+// page), "cta" (clicked buy) or "checkout" (reached checkout on the main site).
+// Purchases aren't events — they're orders carrying the same source/visitorId.
+model LandingEvent {
+  id          String  @id @default(uuid())
+  landingSlug String
+  type        String
+  visitorId   String
+  utmSource   String?
+  utmMedium   String?
+  utmCampaign String?
+  utmContent  String?
+  referrer    String?
+  device      String?
+  country     String?
+
+  createdAt TimestamptzString @default(now())
+
+  @@index([landingSlug, createdAt])
+  @@index([visitorId])
 }

@@ -1,72 +1,32 @@
-import { db } from "@/lib/db";
 import { authPool } from "@/lib/auth";
 
-export async function getDashboardStats() {
-  const [orderTotals, productCount, customerCountResult] = await Promise.all([
-    db.orm.public.Order
-      .where({ status: "PAID" })
-      .aggregate((aggregate) => ({
-        count: aggregate.count(),
-        revenue: aggregate.sum("total"),
-      })),
-    db.orm.public.Product.aggregate((aggregate) => ({ count: aggregate.count() })),
-    authPool.query<{ count: string }>('select count(*) from "user"'),
-  ]);
-
-  return {
-    orderCount: orderTotals.count,
-    revenue: Number(orderTotals.revenue ?? 0),
-    productCount: productCount.count,
-    customerCount: Number(customerCountResult.rows[0]?.count ?? 0),
-  };
-}
-
-export async function getRecentOrdersAdmin(limit = 10) {
-  const orders = await db.orm.public.Order
-    .orderBy((o) => o.createdAt.desc())
-    .limit(limit)
-    .all();
-
-  const userIds = [...new Set(orders.map((o) => o.userId))];
-  const users =
-    userIds.length > 0
-      ? await authPool.query<{ id: string; email: string }>(
-          'select id, email from "user" where id = any($1)',
-          [userIds]
-        )
-      : { rows: [] };
-
-  const emailById = new Map(users.rows.map((u) => [u.id, u.email]));
-
-  return orders.map((order) => ({
-    ...order,
-    customerEmail: order.email ?? emailById.get(order.userId) ?? "—",
-  }));
-}
-
+/** Buyers, one per email — there are no customer accounts. */
 export async function getCustomersAdmin() {
   const result = await authPool.query<{
-    id: string;
-    name: string;
     email: string;
-    role: string;
-    createdAt: Date;
     orderCount: string;
+    paidCount: string;
     totalSpent: string | null;
+    firstOrderAt: Date;
+    lastOrderAt: Date;
   }>(`
-    select
-      u.id, u.name, u.email, u.role, u."createdAt",
-      count(o.id) as "orderCount",
-      sum(o.total) filter (where o.status = 'PAID') as "totalSpent"
-    from "user" u
-    left join "order" o on o."userId" = u.id
-    group by u.id
-    order by u."createdAt" desc
+    select lower(o.email) as email,
+      count(*) as "orderCount",
+      count(*) filter (where o.status = 'PAID') as "paidCount",
+      sum(o.total - o."refundedAmount") filter (where o.status = 'PAID') as "totalSpent",
+      min(o."createdAt") as "firstOrderAt",
+      max(o."createdAt") as "lastOrderAt"
+    from public."order" o
+    where o.email is not null
+    group by 1
+    having count(*) filter (where o.status = 'PAID') > 0
+    order by "totalSpent" desc nulls last
   `);
 
   return result.rows.map((row) => ({
     ...row,
     orderCount: Number(row.orderCount),
+    paidCount: Number(row.paidCount),
     totalSpent: Number(row.totalSpent ?? 0),
   }));
 }

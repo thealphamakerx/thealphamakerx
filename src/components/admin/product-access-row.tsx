@@ -10,6 +10,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/components/ui/toast";
 import { formatPrice } from "@/lib/pricing";
+import { ProductDetailsEditor } from "./product-details-editor";
 
 // Mirrors MAX_UPLOAD_BYTES in lib/storage (server-only module); the server
 // re-checks both before signing and after the upload lands.
@@ -47,6 +48,7 @@ export function ProductAccessRow({
   isActive,
   digitalAccessUrl,
   digitalFileName,
+  details,
 }: {
   id: string;
   slug: string;
@@ -55,6 +57,7 @@ export function ProductAccessRow({
   isActive: boolean;
   digitalAccessUrl: string | null;
   digitalFileName: string | null;
+  details: React.ComponentProps<typeof ProductDetailsEditor>["initial"];
 }) {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -192,6 +195,8 @@ export function ProductAccessRow({
             {saving ? "Saving…" : "Save"}
           </Button>
         </div>
+
+        <ProductDetailsEditor id={id} initial={details} />
       </CardContent>
     </Card>
   );

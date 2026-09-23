@@ -4,13 +4,22 @@ import { getCartSummary } from "@/lib/cart";
 import { rateLimit, getClientIp } from "@/lib/rate-limit";
 import { createCheckoutToken } from "@/lib/payments/access";
 import { z } from "zod";
+import { VISITOR_ID_RE } from "@/lib/tracking";
 
 // There are no customer accounts: every order belongs to the buyer's email.
 export async function POST(request: NextRequest) {
   const parsed = z.object({
     email: z.string().trim().toLowerCase().pipe(z.string().email().max(254)),
     phone: z.string().regex(/^[6-9]\d{9}$/),
-    productIds: z.array(z.string().min(1).max(100)).min(1).max(50),
+    offerId: z.string().min(1).max(100).optional(),
+    productIds: z.array(z.string().min(1).max(100)).max(50),
+    // Landing page slug the buyer came from, for sales-by-source reporting.
+    source: z.string().max(100).optional(),
+    visitorId: z.string().regex(VISITOR_ID_RE).optional(),
+    utm_source: z.string().trim().max(150).optional(),
+    utm_medium: z.string().trim().max(150).optional(),
+    utm_campaign: z.string().trim().max(150).optional(),
+    utm_content: z.string().trim().max(150).optional(),
     couponCode: z.string().max(100).optional(),
   }).safeParse(await request.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: "Enter a valid email and 10-digit Indian mobile number." }, { status: 400 });
@@ -22,10 +31,13 @@ export async function POST(request: NextRequest) {
   }
 
   const userId = `guest:${body.email}`;
-  const summary = await getCartSummary(body.productIds, {
-    couponCode: body.couponCode,
-    userId,
-  });
+  const [summary, landing] = await Promise.all([
+    getCartSummary({ offerId: body.offerId, productIds: body.productIds }, {
+      couponCode: body.couponCode,
+      userId,
+    }),
+    body.source ? db.orm.public.LandingPage.first({ slug: body.source }) : null,
+  ]);
   if (summary.lines.length === 0) {
     return NextResponse.json({ error: "This product is no longer available" }, { status: 400 });
   }
@@ -40,16 +52,27 @@ export async function POST(request: NextRequest) {
       discountAmount: summary.discountAmount,
       couponCode: summary.couponCode ?? undefined,
       total: summary.total,
+      source: landing?.slug ?? undefined,
+      // Attribution only counts alongside a real landing page.
+      ...(landing ? {
+        visitorId: body.visitorId,
+        utmSource: body.utm_source,
+        utmMedium: body.utm_medium,
+        utmCampaign: body.utm_campaign,
+        utmContent: body.utm_content,
+      } : {}),
     });
 
-    for (const line of summary.lines) {
+    for (const item of summary.orderItems) {
       await tx.orm.public.OrderItem.create({
         orderId: newOrder.id,
-        productId: line.productId,
-        productName: line.productName,
-        quantity: line.quantity,
-        unitPrice: line.unitPrice,
-        finalPrice: line.lineTotal,
+        productId: item.productId,
+        productName: item.productName,
+        quantity: 1,
+        unitPrice: item.unitPrice,
+        finalPrice: item.finalPrice,
+        offerId: item.offerId ?? undefined,
+        offerName: item.offerName ?? undefined,
       });
     }
 
