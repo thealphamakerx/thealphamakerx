@@ -152,7 +152,7 @@ export function LandingEditor({ page, products, offers }: { page: Page; products
       </Section>
 
       <Section title="Top bar & countdown" hint="Announcement strip and a real offer deadline">
-        <Field label="Announcement" hint="Shown in a strip at the very top, e.g. “Launch price — this week only”.">
+        <Field label="Announcement" hint="Shown in a strip at the very top. Type {price}, {originalPrice} or {percentOff} instead of a number and it always shows the product's current price, e.g. “Today only {price} — not {originalPrice}”.">
           <TextInput maxLength={160} value={content.announcement} onChange={(e) => set({ announcement: e.target.value })} />
         </Field>
         <Field label="Offer ends at (optional)" hint="Shows a live countdown until this time, then the countdown disappears. Only set a deadline you'll honour — change the price when it passes.">

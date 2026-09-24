@@ -1,5 +1,6 @@
 import { Header } from "@/components/storefront/header";
 import { Footer } from "@/components/storefront/footer";
+import { MetaPixel } from "@/components/analytics/meta-pixel";
 
 export default function StoreLayout({ children }: LayoutProps<"/">) {
   return (
@@ -7,6 +8,7 @@ export default function StoreLayout({ children }: LayoutProps<"/">) {
       <Header />
       <div className="flex flex-1 flex-col">{children}</div>
       <Footer />
+      <MetaPixel />
     </div>
   );
 }

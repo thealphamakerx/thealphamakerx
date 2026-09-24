@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 
 export default function PrivacyPolicyPage() {
   return (
-    <LegalPageShell title="Privacy Policy" lastUpdated="September 17, 2026">
+    <LegalPageShell title="Privacy Policy" lastUpdated="September 24, 2026">
       <p>
         This policy explains what personal data {siteConfig.name} (&ldquo;we&rdquo;,
         &ldquo;us&rdquo;, &ldquo;our&rdquo;) collects when you use {siteConfig.url}, why we
@@ -54,15 +54,16 @@ export default function PrivacyPolicyPage() {
           When you sign in, we record the IP address and browser user-agent attached to that
           login session, so you and we can recognise unusual account activity. We also use IP
           addresses transiently to rate-limit sign-in attempts and other sensitive endpoints
-          against brute-force and abuse. We do not run third-party advertising or behavioural
-          analytics trackers, and we do not build advertising profiles.
+          against brute-force and abuse. We also use the Meta Pixel (see section 2) to measure
+          how our Facebook and Instagram ads perform: it tells Meta which of our pages you
+          visit, along with your IP address and browser details. We do not sell this data.
         </LegalSubSection>
       </LegalSection>
 
       <LegalSection title="2. What We Store in Your Browser">
         <p>
-          We use a small number of strictly necessary storage mechanisms. None of them are
-          used for advertising or cross-site tracking:
+          We use a small number of strictly necessary storage mechanisms, plus one
+          advertising cookie:
         </p>
         <LegalList
           items={[
@@ -70,6 +71,7 @@ export default function PrivacyPolicyPage() {
             "Your shopping cart, held in your browser's local storage on your own device — it is not transmitted to us until you check out.",
             "Standard security cookies used during sign-in to prevent request forgery.",
             "A checkout reference and signed access token in session storage so an interrupted payment can be resumed in the same browser tab.",
+            "The Meta Pixel cookie (_fbp), set by Meta Platforms to measure our Facebook and Instagram ads and to show our ads to people who have visited this site. You can limit this in your Facebook ad preferences or by blocking third-party cookies.",
           ]}
         />
         <p>
@@ -105,6 +107,7 @@ export default function PrivacyPolicyPage() {
             "Cashfree Payments — payment processing. Receives your payment details directly from you and returns a payment result to us.",
             "Neon — managed PostgreSQL database hosting for your account and order records.",
             "Cloudflare R2 — private object storage holding the product files you download.",
+            "Meta Platforms — advertising measurement through the Meta Pixel. Receives the pages you visit on this site, your IP address and browser details.",
             "Resend — transactional email delivery. Receives your email address and the contents of order confirmation and status emails.",
             "Google LLC — only if you choose to sign in with Google, in which case Google authenticates you and tells us your name, email address and profile picture.",
           ]}

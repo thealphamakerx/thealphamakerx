@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { Anek_Malayalam, Chilanka } from "next/font/google";
 import { siteConfig } from "@/config/site";
+import { MetaPixel } from "@/components/analytics/meta-pixel";
 
 // Malayalam landing pages: Chilanka (handwritten) for headlines, Anek Malayalam for
 // reading text. Both include Latin, so mixed Malayalam/English lines stay consistent.
@@ -34,6 +35,7 @@ export default function LandingLayout({ children }: LayoutProps<"/">) {
         </nav>
         <p>© {new Date().getFullYear()} {siteConfig.legalName} · {siteConfig.contactEmail}</p>
       </footer>
+      <MetaPixel />
     </div>
   );
 }

@@ -34,7 +34,7 @@ Bucket → **Settings** → **CORS policy** → Edit:
 ```json
 [
   {
-    "AllowedOrigins": ["https://thealphamakerx.in", "http://localhost:3000"],
+    "AllowedOrigins": ["https://www.thealphamakerx.in", "https://thealphamakerx.in", "http://localhost:3000"],
     "AllowedMethods": ["PUT", "GET", "HEAD"],
     "AllowedHeaders": ["Content-Type", "Content-Disposition"],
     "MaxAgeSeconds": 3600

@@ -6,7 +6,7 @@ import { getProductBySlug } from "@/lib/products";
 import { getActiveOffers } from "@/lib/offers";
 import { offerPack, productPack } from "@/lib/checkout-options";
 import { discountPercent, formatPrice } from "@/lib/pricing";
-import { label as labelOf, sectionOrder, type LabelKey, type LandingContent, type SectionKey } from "@/lib/landing-content";
+import { fillPricePlaceholders, label as labelOf, sectionOrder, type LabelKey, type LandingContent, type SectionKey } from "@/lib/landing-content";
 import { Countdown } from "./countdown";
 import { SmartImage } from "@/components/media/smart-image";
 import { videoPoster, withTransform } from "@/lib/media";
@@ -50,6 +50,7 @@ export function LandingView({ page, data }: { page: LandingPageRecord; data: Loa
   const t = (key: LabelKey) => labelOf(content, key);
   const cover = content.heroImageUrl ? { url: content.heroImageUrl, alt: content.headline || product.name } : images[0];
   const percentOff = discountPercent(product.price, product.originalPrice);
+  const announcement = fillPricePlaceholders(content.announcement, product);
   const cta = content.ctaLabel || "Get instant access";
   const inside = content.inside.length ? content.inside : features.map((f) => ({ title: f.label, description: "" }));
   const bonusValue = content.bonuses.reduce((sum, b) => sum + b.value, 0);
@@ -142,9 +143,10 @@ export function LandingView({ page, data }: { page: LandingPageRecord; data: Loa
 
     testimonials: () => content.testimonials.length > 0 && (
       <Section eyebrow={t("testimonialsEyebrow")} title={content.testimonialsTitle || "What readers say"}>
-        <div className="columns-1 gap-4 sm:columns-2 [&>*]:mb-4">
+        {/* Phones: a swipeable row of near-full-width screenshots; wider screens: two columns. */}
+        <div className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:none] sm:mx-0 sm:block sm:columns-2 sm:gap-4 sm:overflow-visible sm:px-0 sm:pb-0 sm:[&>*]:mb-4">
           {content.testimonials.map((item, i) => (
-            <figure key={`${item.name}-${i}`} className="lp-card break-inside-avoid overflow-hidden">
+            <figure key={`${item.name}-${i}`} className="lp-card w-[86%] shrink-0 snap-center break-inside-avoid self-start overflow-hidden sm:w-auto">
               {item.videoUrl ? (
                 <video src={item.videoUrl} poster={videoPoster(item.videoUrl)} controls playsInline preload="none" className="w-full bg-black" />
               ) : item.imageUrl && (
@@ -160,6 +162,9 @@ export function LandingView({ page, data }: { page: LandingPageRecord; data: Loa
             </figure>
           ))}
         </div>
+        {content.testimonials.length > 1 && (
+          <p className="mt-3 text-center text-xs text-muted-foreground sm:hidden" aria-hidden="true">← {content.testimonials.length} →</p>
+        )}
       </Section>
     ),
 
@@ -272,14 +277,24 @@ export function LandingView({ page, data }: { page: LandingPageRecord; data: Loa
   return (
     <div className="lp flex flex-1 flex-col pb-20" lang={content.language}>
       <LandingTracker slug={page.slug} enabled={page.isActive} />
-      {(content.announcement || endsAt) && (
-        <div className="lp-announcement px-4 py-2.5 text-center text-xs font-semibold uppercase tracking-[0.12em] sm:text-sm">
-          {content.announcement}
+      {(announcement || endsAt) && (
+        <div className="lp-announcement text-xs font-semibold uppercase tracking-[0.12em] sm:text-sm">
+          {announcement && (
+            // Scrolling ticker. Two identical halves, so sliding by half loops seamlessly.
+            <div className="lp-marquee py-2.5">
+              <span className="sr-only">{announcement}</span>
+              <div className="lp-marquee-track" aria-hidden="true">
+                {Array.from({ length: 12 }, (_, i) => (
+                  <span key={i} className="lp-marquee-item">{announcement}<span className="lp-marquee-dot">✦</span></span>
+                ))}
+              </div>
+            </div>
+          )}
           {endsAt && (
-            <span className="ml-2 inline-flex items-center gap-2 normal-case tracking-normal">
-              {content.announcement ? "·" : ""} {t("countdown")}
+            <p className={`flex items-center justify-center gap-2 px-4 pb-2.5 normal-case tracking-normal ${announcement ? "" : "pt-2.5"}`}>
+              {t("countdown")}
               <Countdown endsAt={endsAt} className="inline-flex gap-1.5" />
-            </span>
+            </p>
           )}
         </div>
       )}
@@ -323,7 +338,7 @@ export function LandingView({ page, data }: { page: LandingPageRecord; data: Loa
             )}
           </div>
           {content.heroVideoUrl ? (
-            <div className="lp-cover mx-auto w-full max-w-md overflow-hidden rounded-2xl bg-black">
+            <div className="lp-cover lp-cover-bleed order-first mx-auto w-full max-w-md overflow-hidden rounded-2xl bg-black md:order-none">
               <video
                 src={content.heroVideoUrl}
                 poster={videoPoster(content.heroVideoUrl) ?? (cover ? withTransform(cover.url, "w-800") : undefined)}
@@ -335,7 +350,8 @@ export function LandingView({ page, data }: { page: LandingPageRecord; data: Loa
             </div>
           ) : cover && (
             // Natural aspect ratio: portrait book covers and 16:9 banners both show uncropped.
-            <div className="lp-cover mx-auto w-full max-w-xl overflow-hidden rounded-2xl">
+            // Phones: first thing on the page, edge to edge (lp-cover-bleed).
+            <div className="lp-cover lp-cover-bleed order-first mx-auto w-full max-w-xl overflow-hidden rounded-2xl md:order-none">
               {/* eslint-disable-next-line @next/next/no-img-element -- cover of unknown aspect; ImageKit resizes it */}
               <img src={withTransform(cover.url, "w-1200")} alt={cover.alt ?? product.name} fetchPriority="high" className="block h-auto w-full" />
             </div>

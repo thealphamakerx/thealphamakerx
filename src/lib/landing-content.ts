@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { discountPercent, formatPrice } from "@/lib/pricing";
 
 // Landing page content, stored as JSON in landingPage.content. No database
 // access here, so the admin editor can use it in the browser. Every section is
@@ -146,3 +147,16 @@ export function defaultLandingContent(product: { name: string; description: stri
 }
 
 export const SLUG_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
+/**
+ * Fill live price placeholders in landing copy, so text such as the top bar
+ * never goes stale when the product's price changes:
+ * {price} → ₹499, {originalPrice} → ₹2,599, {percentOff} → 81.
+ */
+export function fillPricePlaceholders(text: string, product: { price: number; originalPrice: number | null }) {
+  const percentOff = discountPercent(product.price, product.originalPrice);
+  return text
+    .replaceAll("{price}", formatPrice(product.price))
+    .replaceAll("{originalPrice}", formatPrice(percentOff !== null ? product.originalPrice! : product.price))
+    .replaceAll("{percentOff}", String(percentOff ?? 0));
+}
