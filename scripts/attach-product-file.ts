@@ -6,7 +6,7 @@
 //   node scripts/attach-product-file.ts <file> --all --dry-run
 //
 // Does exactly what the admin Products page does (POST /api/upload then
-// /api/upload/complete), minus the browser: uploads to Neon Object Storage,
+// /api/upload/complete), minus the browser: uploads to Cloudflare R2,
 // confirms the object really landed, points the product at it, and deletes
 // the file it replaced. Each product gets its own copy under its own key, so
 // replacing one later never disturbs the others.
@@ -15,14 +15,14 @@ import { randomUUID } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { basename } from "node:path";
 import { db } from "../src/prisma/db.ts";
+import { cleanFileName, deleteObject, getObjectSize, createUploadUrl } from "../src/lib/storage.ts";
 import {
-  cleanFileName,
-  deleteObject,
-  getObjectSize,
-  MAX_UPLOAD_BYTES,
-  UPLOAD_CONTENT_TYPES,
-  createUploadUrl,
-} from "../src/lib/storage.ts";
+  PRODUCT_FILE_KINDS,
+  productFileColumns,
+  productFileKeyPrefix,
+} from "../src/lib/product-file-kinds.ts";
+
+const { contentTypes: UPLOAD_CONTENT_TYPES, maxBytes: MAX_UPLOAD_BYTES } = PRODUCT_FILE_KINDS.download;
 
 const EXTENSION_CONTENT_TYPES: Record<string, string> = Object.fromEntries(
   Object.entries(UPLOAD_CONTENT_TYPES).map(([contentType, ext]) => [ext, contentType])
@@ -59,7 +59,7 @@ async function main() {
 
   if (!contentType) {
     throw new Error(
-      `Unsupported file type ".${extension}". Allowed: ${Object.values(UPLOAD_CONTENT_TYPES).join(", ")}`
+      `Unsupported file type ".${extension}". Allowed: ${[...new Set(Object.values(UPLOAD_CONTENT_TYPES))].join(", ")}`
     );
   }
   if (body.byteLength > MAX_UPLOAD_BYTES) {
@@ -87,7 +87,7 @@ async function main() {
   }
 
   for (const product of products) {
-    const key = `products/${product.id}/${randomUUID()}.${extension}`;
+    const key = `${productFileKeyPrefix(product.id, "download")}${randomUUID()}.${extension}`;
 
     const { uploadUrl, headers } = await createUploadUrl({ key, contentType, fileName });
     const response = await fetch(uploadUrl, { method: "PUT", body, headers });
@@ -104,7 +104,7 @@ async function main() {
     const previousKey = product.digitalFileKey;
     await db.orm.public.Product
       .where({ id: product.id })
-      .update({ digitalFileKey: key, digitalFileName: fileName });
+      .update(productFileColumns("download", { key, name: fileName, size, uploadedAt: new Date().toISOString() }));
 
     if (previousKey && previousKey !== key) {
       await deleteObject(previousKey).catch((error) =>

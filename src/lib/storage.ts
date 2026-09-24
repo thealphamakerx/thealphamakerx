@@ -7,20 +7,10 @@ import {
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
-export const MAX_UPLOAD_BYTES = 500 * 1024 * 1024; // 500MB
-
-export const UPLOAD_CONTENT_TYPES: Record<string, string> = {
-  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": "xlsx",
-  "application/vnd.ms-excel": "xls",
-  "application/vnd.ms-excel.sheet.macroEnabled.12": "xlsm",
-  "text/csv": "csv",
-  "application/pdf": "pdf",
-  "application/zip": "zip",
-  "application/x-zip-compressed": "zip",
-};
-
-// Neon Object Storage (S3-compatible, branches with the database). The
-// AWS_* vars are the names `neon env pull` writes for the branch.
+// Cloudflare R2 (S3-compatible). This project has its own private bucket and
+// a bucket-scoped API token, kept apart from the other projects on the same
+// Cloudflare account. Server-only: the secret never reaches the browser, which
+// only ever sees short-lived presigned URLs.
 // Lazy singleton so a missing credential fails the request that needs
 // storage, not module evaluation or the build.
 let s3Client: S3Client | undefined;
@@ -28,22 +18,20 @@ let s3Client: S3Client | undefined;
 function getClient() {
   if (s3Client) return s3Client;
 
-  const endpoint = process.env.AWS_ENDPOINT_URL_S3;
-  const accessKeyId = process.env.AWS_ACCESS_KEY_ID;
-  const secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY;
+  const accountId = process.env.R2_ACCOUNT_ID;
+  const accessKeyId = process.env.R2_ACCESS_KEY_ID;
+  const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY;
 
-  if (!endpoint || !accessKeyId || !secretAccessKey) {
+  if (!accountId || !accessKeyId || !secretAccessKey || !process.env.R2_BUCKET) {
     throw new Error(
-      "Neon Object Storage isn't configured — set AWS_ENDPOINT_URL_S3, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY (neon env pull)"
+      "Cloudflare R2 isn't configured — set R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY and R2_BUCKET"
     );
   }
 
   s3Client = new S3Client({
-    endpoint,
-    region: process.env.AWS_REGION ?? "us-east-2",
+    endpoint: `https://${accountId}.r2.cloudflarestorage.com`,
+    region: "auto",
     credentials: { accessKeyId, secretAccessKey },
-    // Neon only supports path-style addressing.
-    forcePathStyle: true,
     // The SDK otherwise signs a CRC32 checksum into presigned PUT URLs,
     // which a browser uploading the raw file can't supply.
     requestChecksumCalculation: "WHEN_REQUIRED",
@@ -53,8 +41,11 @@ function getClient() {
 }
 
 function getBucket() {
-  return process.env.STORAGE_BUCKET || "uploads";
+  return process.env.R2_BUCKET!;
 }
+
+/** How long a presigned download link works. Regenerated on every request, never stored. */
+export const DOWNLOAD_URL_TTL_SECONDS = 15 * 60;
 
 /**
  * Presigned PUT the admin's browser uploads to directly — large files never
@@ -105,15 +96,18 @@ export async function deleteObject(key: string) {
   await getClient().send(new DeleteObjectCommand({ Bucket: getBucket(), Key: key }));
 }
 
-export async function getSignedDownloadUrl(key: string, fileName?: string | null) {
+export async function getSignedDownloadUrl(
+  key: string,
+  fileName?: string | null,
+  { inline = false }: { inline?: boolean } = {}
+) {
   const command = new GetObjectCommand({
     Bucket: getBucket(),
     Key: key,
-    ResponseContentDisposition: fileName ? contentDisposition(fileName) : undefined,
+    ResponseContentDisposition: fileName ? contentDisposition(fileName, inline) : undefined,
   });
 
-  // Short-lived — regenerated on every access request, never stored.
-  return getSignedUrl(getClient(), command, { expiresIn: 300 });
+  return getSignedUrl(getClient(), command, { expiresIn: DOWNLOAD_URL_TTL_SECONDS });
 }
 
 /** File names come from the admin's machine — keep them to one safe segment. */
@@ -121,9 +115,9 @@ export function cleanFileName(fileName: string) {
   return fileName.replace(/[/\\]/g, "_").trim().slice(0, 200) || "download";
 }
 
-function contentDisposition(fileName: string) {
+function contentDisposition(fileName: string, inline = false) {
   const asciiName = fileName.replace(/[^\x20-\x7e]/g, "_").replace(/["\\]/g, "_");
-  return `attachment; filename="${asciiName}"; filename*=UTF-8''${encodeURIComponent(fileName)}`;
+  return `${inline ? "inline" : "attachment"}; filename="${asciiName}"; filename*=UTF-8''${encodeURIComponent(fileName)}`;
 }
 
 // Shared by every access route (authenticated, guest-token, admin preview):

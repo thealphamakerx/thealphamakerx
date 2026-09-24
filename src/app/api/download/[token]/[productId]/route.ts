@@ -1,42 +1,23 @@
 import { NextResponse } from "next/server";
-import { db } from "@/lib/db";
-import { verifyOrderAccessToken } from "@/lib/order-token";
-import { getProductDownloadUrl } from "@/lib/storage";
+import { authorizeDownload } from "@/lib/downloads";
 
-// Public — no session required. The token (HMAC over an orderId) is the
-// bearer credential guest buyers use instead of an account. Every request
-// still re-verifies the order is PAID, so a leaked link is only ever as
-// good as the order behind it.
+// Public — no login. The token in the path is the buyer's order link (sent to
+// the order's email); authorizeDownload re-checks the order, payment and
+// purchase on every request before minting a 15-minute R2 URL.
 export async function GET(
   _request: Request,
   { params }: RouteContext<"/api/download/[token]/[productId]">
 ) {
   const { token, productId } = await params;
 
-  const orderId = verifyOrderAccessToken(token);
-  if (!orderId) {
-    return NextResponse.json({ error: "Invalid or broken link" }, { status: 403 });
+  const result = await authorizeDownload(token, productId);
+  if (!result.ok) {
+    return NextResponse.json({ error: result.error }, { status: result.status });
   }
 
-  const order = await db.orm.public.Order.first({ id: orderId });
-  if (!order || order.status !== "PAID") {
-    return NextResponse.json({ error: "Order not found or not paid" }, { status: 403 });
-  }
-
-  const item = await db.orm.public.OrderItem.first({ orderId, productId });
-  if (!item) {
-    return NextResponse.json({ error: "That product isn't part of this order" }, { status: 403 });
-  }
-
-  const product = await db.orm.public.Product.first({ id: productId });
-  if (!product) {
-    return NextResponse.json({ error: "Product not found" }, { status: 404 });
-  }
-
-  const url = await getProductDownloadUrl(product);
-  if (!url) {
-    return NextResponse.json({ error: "No file uploaded for this product yet" }, { status: 404 });
-  }
-
-  return NextResponse.redirect(url);
+  const response = NextResponse.redirect(result.url);
+  // The signed URL must not be cached or leaked to the file host via Referer.
+  response.headers.set("Cache-Control", "no-store");
+  response.headers.set("Referrer-Policy", "no-referrer");
+  return response;
 }

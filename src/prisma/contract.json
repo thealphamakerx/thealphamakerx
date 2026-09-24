@@ -1969,6 +1969,20 @@
                   "kind": "scalar"
                 }
               },
+              "digitalFileSize": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "digitalFileUploadedAt": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
               "iconName": {
                 "nullable": true,
                 "type": {
@@ -2001,6 +2015,34 @@
                 "nullable": true,
                 "type": {
                   "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "previewFileKey": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "previewFileName": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "previewFileSize": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "previewFileUploadedAt": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
                   "kind": "scalar"
                 }
               },
@@ -2071,6 +2113,12 @@
                 "digitalFileName": {
                   "column": "digitalFileName"
                 },
+                "digitalFileSize": {
+                  "column": "digitalFileSize"
+                },
+                "digitalFileUploadedAt": {
+                  "column": "digitalFileUploadedAt"
+                },
                 "iconName": {
                   "column": "iconName"
                 },
@@ -2085,6 +2133,18 @@
                 },
                 "originalPrice": {
                   "column": "originalPrice"
+                },
+                "previewFileKey": {
+                  "column": "previewFileKey"
+                },
+                "previewFileName": {
+                  "column": "previewFileName"
+                },
+                "previewFileSize": {
+                  "column": "previewFileSize"
+                },
+                "previewFileUploadedAt": {
+                  "column": "previewFileUploadedAt"
                 },
                 "price": {
                   "column": "price"
@@ -4098,6 +4158,16 @@
                   "nativeType": "text",
                   "nullable": true
                 },
+                "digitalFileSize": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": true
+                },
+                "digitalFileUploadedAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "nativeType": "timestamptz",
+                  "nullable": true
+                },
                 "iconName": {
                   "codecId": "pg/text@1",
                   "nativeType": "text",
@@ -4125,6 +4195,26 @@
                 "originalPrice": {
                   "codecId": "pg/int4@1",
                   "nativeType": "int4",
+                  "nullable": true
+                },
+                "previewFileKey": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "previewFileName": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "previewFileSize": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": true
+                },
+                "previewFileUploadedAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "nativeType": "timestamptz",
                   "nullable": true
                 },
                 "price": {
@@ -4710,7 +4800,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "d19c9f19cbaba3f5b29bd7cbf02bc55262801373a810747a80a0867c6c374f51"
+    "storageHash": "046fa86293c338403697ffbd0a730a4e310a1b384eb90e854e71e11a1e4d18d4"
   },
   "execution": {
     "executionHash": "8aaafa80c94b69d5be76e561556743ae0876dd63d7b75768fdc3d58c33f0c910",

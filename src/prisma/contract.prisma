@@ -116,6 +116,14 @@ model Product {
   // redirecting to digitalAccessUrl.
   digitalFileKey   String?
   digitalFileName  String?
+  digitalFileSize       Int?
+  digitalFileUploadedAt TimestamptzString?
+  // Optional free sample (PDF/image) in the same private R2 bucket. Anyone
+  // may open it — served through /api/preview with a short-lived URL.
+  previewFileKey        String?
+  previewFileName       String?
+  previewFileSize       Int?
+  previewFileUploadedAt TimestamptzString?
 
   // Lets seeded/migrated social proof (from before this system existed)
   // display without faking individual Review rows. When set, the storefront

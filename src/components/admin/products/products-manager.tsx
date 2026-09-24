@@ -12,7 +12,7 @@ import { discountPercent, formatPrice } from "@/lib/pricing";
 import { withTransform } from "@/lib/media";
 import { MediaField } from "@/components/media/media-field";
 import { Field, LinesField, RepeatableList, RupeeInput, TextArea, TextInput, slugify } from "../form-fields";
-import { ProductFileField } from "./product-file-field";
+import { ProductFileField, type AdminProductFile } from "./product-file-field";
 
 export type AdminProduct = {
   id: string;
@@ -23,7 +23,8 @@ export type AdminProduct = {
   originalPrice: number | null;
   badge: string | null;
   isActive: boolean;
-  digitalFileName: string | null;
+  downloadFile: AdminProductFile | null;
+  previewFile: AdminProductFile | null;
   digitalAccessUrl: string | null;
   ratingOverride: number | null;
   reviewCountOverride: number | null;
@@ -138,7 +139,7 @@ export function ProductsManager({ products }: { products: AdminProduct[] }) {
                       <span className="min-w-0">
                         <span className="block font-medium">{p.name}</span>
                         <span className="block text-xs text-muted-foreground">
-                          /{p.slug}{p.images.length === 0 && " · no images"}{!p.digitalFileName && !p.digitalAccessUrl && " · no download file"}
+                          /{p.slug}{p.images.length === 0 && " · no images"}{!p.downloadFile && !p.digitalAccessUrl && " · no download file"}
                         </span>
                       </span>
                     </button>
@@ -345,10 +346,12 @@ function ProductPanel({ product, onClose }: { product: AdminProduct; onClose: ()
           <LinesField label="Points" rows={6} value={draft.features} onChange={(features) => set({ features })} />
         </PanelSection>
 
-        <PanelSection title="Download file" hint="What buyers get after paying.">
+        <PanelSection title="Files" hint="Stored privately in Cloudflare R2. The product file is what buyers get after paying.">
           <ProductFileField
             id={product.id}
-            digitalFileName={product.digitalFileName}
+            downloadFile={product.downloadFile}
+            previewFile={product.previewFile}
+            paidOrders={product.sold}
             digitalAccessUrl={draft.digitalAccessUrl}
             onLinkChange={(digitalAccessUrl) => set({ digitalAccessUrl })}
           />

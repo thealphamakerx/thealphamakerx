@@ -31,7 +31,12 @@ export default async function AdminProductsPage() {
       originalPrice: p.originalPrice ?? null,
       badge: p.badge ?? null,
       isActive: p.isActive,
-      digitalFileName: p.digitalFileName ?? null,
+      downloadFile: p.digitalFileName
+        ? { name: p.digitalFileName, size: p.digitalFileSize ?? null, uploadedAt: p.digitalFileUploadedAt ?? null }
+        : null,
+      previewFile: p.previewFileName
+        ? { name: p.previewFileName, size: p.previewFileSize ?? null, uploadedAt: p.previewFileUploadedAt ?? null }
+        : null,
       digitalAccessUrl: p.digitalAccessUrl ?? null,
       ratingOverride: p.ratingOverride ?? null,
       reviewCountOverride: p.reviewCountOverride ?? null,

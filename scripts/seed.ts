@@ -30,7 +30,7 @@ async function seedAdmin() {
 }
 
 // Real catalog copy. Upload the actual .xlsx from the admin Products page
-// (stored in Neon Object Storage) — or set digitalAccessUrl — once the real
+// (stored in Cloudflare R2) — or set digitalAccessUrl — once the real
 // spreadsheets exist. Prices are in paise; `originalPrice` drives the
 // strike-through and the % off badge.
 type SeedProduct = {

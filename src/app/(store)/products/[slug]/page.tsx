@@ -11,7 +11,7 @@ import { getActiveOffersForProduct } from "@/lib/offers";
 import { formatPrice } from "@/lib/pricing";
 import { StarRating } from "@/components/shared/star-rating";
 import { Badge } from "@/components/ui/badge";
-import { Check } from "lucide-react";
+import { Check, Eye } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -106,6 +106,18 @@ export default async function ProductPage({
               offers={offers}
             />
           </div>
+
+          {product.previewFileKey && (
+            <a
+              href={`/api/preview/${product.id}`}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-2 self-start text-sm font-medium text-primary hover:underline"
+            >
+              <Eye className="size-4" aria-hidden="true" />
+              See a free preview
+            </a>
+          )}
         </div>
       </div>
 

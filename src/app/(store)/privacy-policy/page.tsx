@@ -103,7 +103,8 @@ export default function PrivacyPolicyPage() {
         <LegalList
           items={[
             "Cashfree Payments — payment processing. Receives your payment details directly from you and returns a payment result to us.",
-            "Neon — managed PostgreSQL database hosting for your account and order records, and object storage holding the product files.",
+            "Neon — managed PostgreSQL database hosting for your account and order records.",
+            "Cloudflare R2 — private object storage holding the product files you download.",
             "Resend — transactional email delivery. Receives your email address and the contents of order confirmation and status emails.",
             "Google LLC — only if you choose to sign in with Google, in which case Google authenticates you and tells us your name, email address and profile picture.",
           ]}

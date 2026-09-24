@@ -1,0 +1,254 @@
+[
+  {
+    "id": "column.public.product.digitalFileSize",
+    "label": "Add column \"digitalFileSize\" to \"product\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "digitalFileSize",
+        "table": "product"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"digitalFileSize\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "product",
+          "digitalFileSize"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"digitalFileSize\"",
+        "sql": "ALTER TABLE \"public\".\"product\" ADD COLUMN \"digitalFileSize\" int4"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"digitalFileSize\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "product",
+          "digitalFileSize"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.product.digitalFileUploadedAt",
+    "label": "Add column \"digitalFileUploadedAt\" to \"product\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "digitalFileUploadedAt",
+        "table": "product"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"digitalFileUploadedAt\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "product",
+          "digitalFileUploadedAt"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"digitalFileUploadedAt\"",
+        "sql": "ALTER TABLE \"public\".\"product\" ADD COLUMN \"digitalFileUploadedAt\" timestamptz"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"digitalFileUploadedAt\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "product",
+          "digitalFileUploadedAt"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.product.previewFileKey",
+    "label": "Add column \"previewFileKey\" to \"product\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "previewFileKey",
+        "table": "product"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"previewFileKey\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "product",
+          "previewFileKey"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"previewFileKey\"",
+        "sql": "ALTER TABLE \"public\".\"product\" ADD COLUMN \"previewFileKey\" text"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"previewFileKey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "product",
+          "previewFileKey"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.product.previewFileName",
+    "label": "Add column \"previewFileName\" to \"product\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "previewFileName",
+        "table": "product"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"previewFileName\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "product",
+          "previewFileName"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"previewFileName\"",
+        "sql": "ALTER TABLE \"public\".\"product\" ADD COLUMN \"previewFileName\" text"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"previewFileName\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "product",
+          "previewFileName"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.product.previewFileSize",
+    "label": "Add column \"previewFileSize\" to \"product\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "previewFileSize",
+        "table": "product"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"previewFileSize\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "product",
+          "previewFileSize"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"previewFileSize\"",
+        "sql": "ALTER TABLE \"public\".\"product\" ADD COLUMN \"previewFileSize\" int4"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"previewFileSize\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "product",
+          "previewFileSize"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.product.previewFileUploadedAt",
+    "label": "Add column \"previewFileUploadedAt\" to \"product\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "previewFileUploadedAt",
+        "table": "product"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"previewFileUploadedAt\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "product",
+          "previewFileUploadedAt"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"previewFileUploadedAt\"",
+        "sql": "ALTER TABLE \"public\".\"product\" ADD COLUMN \"previewFileUploadedAt\" timestamptz"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"previewFileUploadedAt\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "product",
+          "previewFileUploadedAt"
+        ]
+      }
+    ]
+  }
+]

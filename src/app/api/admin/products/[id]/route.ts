@@ -76,6 +76,8 @@ export async function DELETE(request: NextRequest, { params }: RouteContext<"/ap
   }
 
   await db.orm.public.Product.where({ id }).delete();
-  if (product.digitalFileKey) await deleteObject(product.digitalFileKey).catch(() => {});
+  for (const key of [product.digitalFileKey, product.previewFileKey]) {
+    if (key) await deleteObject(key).catch(() => {});
+  }
   return NextResponse.json({ ok: true });
 }
