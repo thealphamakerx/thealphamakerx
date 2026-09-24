@@ -19,13 +19,12 @@ declare global {
 export function MetaPixel() {
   const pixelId = siteConfig.metaPixelId;
   const pathname = usePathname();
-  const firstRender = useRef(true);
+  // The page the base code already counted; only a real change sends another.
+  const lastTracked = useRef(pathname);
 
   useEffect(() => {
-    if (firstRender.current) {
-      firstRender.current = false;
-      return;
-    }
+    if (pathname === lastTracked.current) return;
+    lastTracked.current = pathname;
     window.fbq?.("track", "PageView");
   }, [pathname]);
 

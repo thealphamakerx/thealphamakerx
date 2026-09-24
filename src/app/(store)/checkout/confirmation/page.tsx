@@ -11,6 +11,7 @@ import { formatPrice } from "@/lib/pricing";
 import { ORDER_STATUS_LABELS } from "@/constants";
 import { buttonVariants } from "@/components/ui/button";
 import { PendingPaymentRefresher } from "@/components/checkout/pending-payment-refresher";
+import { MetaPurchase } from "@/components/analytics/meta-purchase";
 
 export const dynamic = "force-dynamic";
 
@@ -67,6 +68,11 @@ export default async function CheckoutConfirmationPage({
   return (
     <main className="mx-auto flex w-full max-w-(--breakpoint-sm) flex-1 flex-col items-center justify-center gap-4 px-6 py-16 text-center">
       <PaymentConfirmed orderId={order.id} ordersKey={order.email ? createOrdersKey(order.email) : null} />
+      <MetaPurchase
+        orderId={order.id}
+        total={order.total}
+        items={order.items.map((item) => ({ productId: item.productId, quantity: item.quantity }))}
+      />
       <CheckCircle2 className="size-12 text-success" />
       <h1 className="text-2xl font-semibold">You&apos;re In!</h1>
       <p className="text-sm text-muted-foreground">
