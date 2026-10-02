@@ -257,3 +257,6 @@ a:focus-visible, button:focus-visible { outline: 2px solid var(--primary); outli
 }
 .lp-cta:hover { background: oklch(55% .2 27); box-shadow: 0 0 40px -8px var(--primary); transform: translateY(-1px); }
 .lp-cta:focus-visible { outline: 2px solid var(--ring); outline-offset: 3px; }
+/* Secondary buy button, e.g. "Buy just this" next to a combo. */
+.lp-cta-outline { background: transparent; color: var(--foreground); border: 1px solid color-mix(in oklab, var(--primary) 60%, transparent); box-shadow: none; }
+.lp-cta-outline:hover { background: color-mix(in oklab, var(--primary) 15%, transparent); box-shadow: none; }

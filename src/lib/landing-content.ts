@@ -10,10 +10,11 @@ const text = (max: number) => z.string().trim().max(max).catch("");
 const list = <T extends z.ZodTypeAny>(item: T, max: number) => z.array(item).max(max).catch([]);
 
 /** Page sections below the hero, in their default order. */
-export const SECTION_KEYS = ["pain", "forYou", "inside", "bonuses", "testimonials", "value", "guarantee", "faq", "offers", "closing"] as const;
+export const SECTION_KEYS = ["products", "pain", "forYou", "inside", "bonuses", "testimonials", "value", "guarantee", "faq", "offers", "closing"] as const;
 export type SectionKey = (typeof SECTION_KEYS)[number];
 
 export const SECTION_NAMES: Record<SectionKey, string> = {
+  products: "Products in the combo",
   pain: "Pain points",
   forYou: "Who it's for",
   inside: "What's inside",
@@ -50,6 +51,11 @@ export const DEFAULT_LABELS = {
   included: "Included",
   youSave: "You save",
   percentOff: "off",
+  productsEyebrow: "Everything in the combo",
+  productsTitle: "What you get",
+  buySingle: "Buy just this",
+  freeSample: "See a free preview",
+  seeAll: "See everything inside",
 } as const;
 export type LabelKey = keyof typeof DEFAULT_LABELS;
 
@@ -104,6 +110,21 @@ export const landingContentSchema = z.object({
     stickyBar: z.boolean().catch(true),
   }).catch({ heroPrice: true, heroRating: true, stickyBar: true }),
 
+  /**
+   * Set for a combo page: the page sells this combo (`productId` then just
+   * holds its first product). Every product is shown with its details and can
+   * be bought on its own, or all together at the combo price.
+   */
+  comboOfferId: z.string().max(100).nullable().catch(null),
+  /**
+   * Combo page only: this page's own wording for a product's description and
+   * points (e.g. in the page's language). Empty fields use the product's own.
+   */
+  productDetails: list(z.object({
+    productId: z.string().max(100),
+    description: text(3000),
+    points: list(text(300), 20),
+  }), 10),
   /** Combos offered as "packs" next to the single product, in this order. */
   offerIds: list(z.string().max(100), 10),
   /** Extra products offered as one-click add-ons at checkout. */
@@ -141,6 +162,23 @@ export function defaultLandingContent(product: { name: string; description: stri
     guaranteeText: "Pay once and download straight away. Your files stay available on the My Orders page whenever you need them.",
     faqs: [
       { question: "How do I get it after paying?", answer: "Your download unlocks on the confirmation page the moment payment is confirmed, and the link is emailed to you too." },
+      { question: "Do I need an account?", answer: "No. Just your email — you can find every purchase later under My Orders." },
+    ],
+  });
+}
+
+export function defaultComboLandingContent(offer: { id: string; name: string; description: string | null; items: { name: string }[] }): LandingContent {
+  return landingContentSchema.parse({
+    comboOfferId: offer.id,
+    headline: offer.name,
+    subheadline: offer.description ?? `${offer.items.length} products together for one price — or pick just the one you need.`,
+    heroBullets: offer.items.map((i) => i.name),
+    ctaLabel: "Get the combo",
+    guaranteeTitle: "Instant, lifetime access",
+    guaranteeText: "Pay once and download straight away. Your files stay available on the My Orders page whenever you need them.",
+    faqs: [
+      { question: "Can I buy just one of these?", answer: "Yes. Every product has its own buy button — the combo simply saves you money when you want them all." },
+      { question: "How do I get the files after paying?", answer: "Your downloads unlock on the confirmation page the moment payment is confirmed, and the links are emailed to you too." },
       { question: "Do I need an account?", answer: "No. Just your email — you can find every purchase later under My Orders." },
     ],
   });

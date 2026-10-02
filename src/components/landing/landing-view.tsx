@@ -1,11 +1,12 @@
-import { Check, ChevronDown, Gift, ShieldCheck, Star, X } from "lucide-react";
+import { Check, ChevronDown, Eye, FileText, Gift, ShieldCheck, Star, X } from "lucide-react";
 import { Fragment } from "react";
 import { siteConfig } from "@/config/site";
 import { db } from "@/lib/db";
 import { getProductBySlug } from "@/lib/products";
-import { getActiveOffers } from "@/lib/offers";
+import { getActiveOffer, getActiveOffers } from "@/lib/offers";
 import { offerPack, productPack } from "@/lib/checkout-options";
 import { discountPercent, formatPrice } from "@/lib/pricing";
+import { formatBytes } from "@/lib/product-file-kinds";
 import { fillPricePlaceholders, label as labelOf, sectionOrder, type LabelKey, type LandingContent, type SectionKey } from "@/lib/landing-content";
 import { Countdown } from "./countdown";
 import { SmartImage } from "@/components/media/smart-image";
@@ -16,21 +17,60 @@ import { CheckoutLink, LandingTracker } from "./tracking";
 type LandingPageRecord = { slug: string; productId: string; isActive: boolean; content: LandingContent };
 
 export async function loadLanding(page: LandingPageRecord) {
+  const { content } = page;
+  // Only a deadline still in the future is shown; after it passes the countdown disappears.
+  const endsAt = content.offerEndsAt && Date.parse(content.offerEndsAt) > Date.now() ? content.offerEndsAt : null;
+
+  if (content.comboOfferId) {
+    // A combo page: every product in the combo, with its full details.
+    const offer = await getActiveOffer({ id: content.comboOfferId });
+    if (!offer) return null;
+    const products = (await Promise.all(offer.items.map((i) => getProductBySlug(i.slug))))
+      .filter((d): d is NonNullable<typeof d> => !!d)
+      .map((d) => {
+        // The page's own wording for the product, where it has any.
+        const own = content.productDetails.find((x) => x.productId === d.product.id);
+        return {
+          ...d,
+          product: { ...d.product, description: own?.description || d.product.description },
+          features: own?.points.length ? own.points.map((label, i) => ({ id: `own-${i}`, label })) : d.features,
+        };
+      });
+    const count = products.reduce((sum, d) => sum + d.ratingSummary.count, 0);
+    const average = count ? products.reduce((sum, d) => sum + d.ratingSummary.average * d.ratingSummary.count, 0) / count : 0;
+    return {
+      product: products[0].product,
+      images: [],
+      features: [],
+      ratingSummary: { average, count },
+      offers: [],
+      endsAt,
+      combo: { offer, products },
+    };
+  }
+
   const productRow = await db.orm.public.Product.first({ id: page.productId });
   if (!productRow) return null;
   const detail = await getProductBySlug(productRow.slug);
   if (!detail) return null;
-  const { content } = page;
 
   const allOffers = content.offerIds.length ? await getActiveOffers() : [];
   const offers = content.offerIds
     .map((id) => allOffers.find((o) => o.id === id))
     .filter((o): o is NonNullable<typeof o> => !!o);
-  // Only a deadline still in the future is shown; after it passes the countdown disappears.
-  const endsAt = content.offerEndsAt && Date.parse(content.offerEndsAt) > Date.now() ? content.offerEndsAt : null;
 
-  return { ...detail, offers, endsAt };
+  return { ...detail, offers, endsAt, combo: null };
 }
+
+/** "PDF · 2.4 MB" for the file a product delivers, when it's an uploaded file. */
+function fileLabel(product: { digitalFileName: string | null; digitalFileSize: number | null }) {
+  const extension = product.digitalFileName?.split(".").pop()?.toUpperCase();
+  if (!extension) return null;
+  return [extension, product.digitalFileSize ? formatBytes(product.digitalFileSize) : null].filter(Boolean).join(" · ");
+}
+
+/** Feature lines shown on a combo product's card before "see all". */
+const FEATURES_SHOWN = 5;
 
 type Loaded = NonNullable<Awaited<ReturnType<typeof loadLanding>>>;
 
@@ -46,28 +86,47 @@ function Section({ id, eyebrow, title, children, className = "" }: { id?: string
 
 export function LandingView({ page, data }: { page: LandingPageRecord; data: Loaded }) {
   const { content } = page;
-  const { product, images, ratingSummary, offers, features, endsAt } = data;
+  const { product, images, ratingSummary, offers, features, endsAt, combo } = data;
   const t = (key: LabelKey) => labelOf(content, key);
-  const cover = content.heroImageUrl ? { url: content.heroImageUrl, alt: content.headline || product.name } : images[0];
-  const percentOff = discountPercent(product.price, product.originalPrice);
-  const announcement = fillPricePlaceholders(content.announcement, product);
+  // What the page headlines: the combo on a combo page, otherwise the product.
+  const sale = combo
+    ? { name: combo.offer.name, price: combo.offer.price, originalPrice: combo.offer.compareAt > combo.offer.price ? combo.offer.compareAt : null }
+    : { name: product.name, price: product.price, originalPrice: product.originalPrice };
+  const cover = content.heroImageUrl ? { url: content.heroImageUrl, alt: content.headline || sale.name } : images[0];
+  const comboCovers = combo && !content.heroImageUrl
+    ? combo.products.flatMap((d) => (d.images[0] ? [{ url: d.images[0].url, alt: d.images[0].alt ?? d.product.name }] : []))
+    : [];
+  const percentOff = discountPercent(sale.price, sale.originalPrice);
+  const announcement = fillPricePlaceholders(content.announcement, sale);
   const cta = content.ctaLabel || "Get instant access";
-  const inside = content.inside.length ? content.inside : features.map((f) => ({ title: f.label, description: "" }));
+  const inside = content.inside.length || combo ? content.inside : features.map((f) => ({ title: f.label, description: "" }));
   const bonusValue = content.bonuses.reduce((sum, b) => sum + b.value, 0);
-  const worth = (product.originalPrice ?? product.price) + bonusValue;
-  const packs = [productPack(product), ...offers.map(offerPack)];
+  const valueItems = combo
+    ? combo.products.map((d) => ({ id: d.product.id, name: d.product.name, value: d.product.originalPrice ?? d.product.price }))
+    : [{ id: product.id, name: product.name, value: product.originalPrice ?? product.price }];
+  const worth = valueItems.reduce((sum, i) => sum + i.value, 0) + bonusValue;
+  const packs = combo
+    ? [offerPack(combo.offer), ...combo.products.map((d) => productPack(d.product))]
+    : [productPack(product), ...offers.map(offerPack)];
+  const bonusItems = content.bonuses.map((b, j) => ({ productId: `bonus-${j}`, name: b.title }));
+  const packIncludes = (pack: (typeof packs)[number]) => combo
+    // A single product's card already carries its name; only the combo lists contents.
+    ? pack.kind === "offer" ? [...(pack.includes ?? []), ...bonusItems] : []
+    : pack.includes ?? [{ productId: product.id, name: product.name }, ...bonusItems];
   const sections = sectionOrder(content).filter((s) => s.visible);
   const offersShown = sections.some((s) => s.key === "offers");
+  const offerSlugs = new Map([...offers, ...(combo ? [combo.offer] : [])].map((o) => [o.id, o.slug]));
+  const productSlugs = new Map(combo ? combo.products.map((d) => [d.product.id, d.product.slug]) : [[product.id, product.slug]]);
   // Buying happens on the main store; the link carries the landing slug (and, via
   // CheckoutLink, the visitor id and ad tags) so the sale is attributed to this page.
-  const checkoutHref = (pack: (typeof packs)[number]) =>
-    `${siteConfig.url}/checkout?${pack.kind === "offer" ? `offer=${encodeURIComponent(offers.find((o) => o.id === pack.id)!.slug)}` : `product=${encodeURIComponent(product.slug)}`}&lp=${encodeURIComponent(page.slug)}`;
+  const checkoutHref = (pack: { kind: "product" | "offer"; id: string }) =>
+    `${siteConfig.url}/checkout?${pack.kind === "offer" ? `offer=${encodeURIComponent(offerSlugs.get(pack.id)!)}` : `product=${encodeURIComponent(productSlugs.get(pack.id)!)}`}&lp=${encodeURIComponent(page.slug)}`;
   const singlePack = packs.length === 1;
   // Several packs: buttons scroll to the pack choice. One pack, or the pack section hidden: straight to checkout.
   const direct = singlePack || !offersShown;
 
   const ctaButton = (id?: string) => {
-    const text = <>{cta} — {formatPrice(product.price)}</>;
+    const text = <>{cta} — {formatPrice(sale.price)}</>;
     const className = "lp-cta h-14 w-full px-8 text-base sm:w-auto";
     return direct
       ? <CheckoutLink id={id} href={checkoutHref(packs[0])} className={className}>{text}</CheckoutLink>
@@ -75,7 +134,103 @@ export function LandingView({ page, data }: { page: LandingPageRecord; data: Loa
   };
   const check = <Check className="mt-0.5 size-5 shrink-0 text-chart" aria-hidden="true" />;
 
+  const stars = (className: string) => (
+    <span className={`flex text-chart ${className}`} aria-hidden="true">
+      {Array.from({ length: 5 }, (_, i) => <Star key={i} className="size-4 fill-current" />)}
+    </span>
+  );
+
+  const featureItem = (f: { id: string; label: string }) => (
+    <li key={f.id} className="flex items-start gap-2"><Check className="mt-0.5 size-4 shrink-0 text-chart" aria-hidden="true" />{f.label}</li>
+  );
+
   const render: Record<SectionKey, () => React.ReactNode> = {
+    products: () => combo && (
+      <Section eyebrow={t("productsEyebrow")} title={t("productsTitle")}>
+        <ol className="flex flex-col gap-5">
+          {combo.products.map(({ product: p, images: pImages, features: pFeatures, ratingSummary: pRating }, i) => {
+            const pOff = discountPercent(p.price, p.originalPrice);
+            const file = fileLabel(p);
+            return (
+              <li key={p.id} className="lp-card flex flex-col overflow-hidden sm:flex-row">
+                {pImages[0] && (
+                  // Natural aspect ratio, so portrait and landscape covers both show uncropped.
+                  <div className="relative self-start sm:w-64 sm:shrink-0 sm:p-4 sm:pr-0">
+                    {/* eslint-disable-next-line @next/next/no-img-element -- cover of unknown aspect; ImageKit resizes it */}
+                    <img src={withTransform(pImages[0].url, "w-600")} alt={pImages[0].alt ?? p.name} loading="lazy" className="block h-auto w-full sm:rounded-xl" />
+                    <span className="lp-number absolute top-3 left-3 sm:top-6 sm:left-6 rounded-full bg-background/85 px-2.5 py-1.5 text-lg backdrop-blur">{String(i + 1).padStart(2, "0")}</span>
+                  </div>
+                )}
+                <div className="flex min-w-0 flex-1 flex-col gap-3 p-5 sm:p-6">
+                  <div className="flex flex-wrap items-center gap-2">
+                    {!pImages[0] && <span className="lp-number">{String(i + 1).padStart(2, "0")}</span>}
+                    <h3 className="text-lg font-semibold sm:text-xl">{p.name}</h3>
+                    {p.badge && <span className="rounded-full bg-primary px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary-foreground">{p.badge}</span>}
+                  </div>
+                  {pRating.count > 0 && (
+                    <p className="flex items-center gap-2 text-xs text-muted-foreground">
+                      {stars("")}
+                      {pRating.average.toFixed(1)} · {pRating.count.toLocaleString("en-IN")} reviews
+                    </p>
+                  )}
+                  {p.description && <p className="text-sm whitespace-pre-line text-muted-foreground">{p.description}</p>}
+                  {pFeatures.length > 0 && (
+                    <ul className="flex flex-col gap-1.5 text-sm">
+                      {pFeatures.slice(0, FEATURES_SHOWN).map(featureItem)}
+                    </ul>
+                  )}
+                  {pFeatures.length > FEATURES_SHOWN && (
+                    <details className="group text-sm">
+                      <summary className="flex cursor-pointer list-none items-center gap-1 font-medium text-chart [&::-webkit-details-marker]:hidden">
+                        {t("seeAll")} (+{pFeatures.length - FEATURES_SHOWN})
+                        <ChevronDown className="size-4 transition-transform group-open:rotate-180" aria-hidden="true" />
+                      </summary>
+                      <ul className="mt-1.5 flex flex-col gap-1.5">{pFeatures.slice(FEATURES_SHOWN).map(featureItem)}</ul>
+                    </details>
+                  )}
+                  {file && (
+                    <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                      <FileText className="size-3.5" aria-hidden="true" /> {file} · instant download
+                    </p>
+                  )}
+                  <div className="mt-auto flex flex-col gap-3 pt-2 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-2xl font-semibold tabular-nums">{formatPrice(p.price)}</span>
+                      {pOff !== null && (
+                        <>
+                          <span className="text-sm text-muted-foreground line-through tabular-nums">{formatPrice(p.originalPrice!)}</span>
+                          <span className="text-xs font-semibold text-success">{pOff}% {t("percentOff")}</span>
+                        </>
+                      )}
+                    </div>
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                      {p.previewFileKey && (
+                        <a href={`${siteConfig.url}/api/preview/${p.id}`} target="_blank" rel="noreferrer" className="inline-flex items-center justify-center gap-1.5 text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline">
+                          <Eye className="size-4" aria-hidden="true" /> {t("freeSample")}
+                        </a>
+                      )}
+                      <CheckoutLink href={checkoutHref({ kind: "product", id: p.id })} className="lp-cta lp-cta-outline h-11 px-5 text-sm">
+                        {t("buySingle")} — {formatPrice(p.price)}
+                      </CheckoutLink>
+                    </div>
+                  </div>
+                </div>
+              </li>
+            );
+          })}
+        </ol>
+        {sale.originalPrice !== null && (
+          <div className="lp-card lp-card-glow mt-6 flex flex-col items-center gap-3 p-6 text-center">
+            <p className="text-sm text-muted-foreground">
+              {t("valueTotal")} <span className="line-through tabular-nums">{formatPrice(sale.originalPrice)}</span>
+              {" · "}{t("youSave")} <span className="font-semibold text-success tabular-nums">{formatPrice(sale.originalPrice - sale.price)}</span>
+            </p>
+            {ctaButton()}
+          </div>
+        )}
+      </Section>
+    ),
+
     pain: () => content.painPoints.length > 0 && (
       <Section title={content.painTitle || "Has this ever happened to you?"}>
         <ul className="flex flex-col gap-3">
@@ -173,10 +328,12 @@ export function LandingView({ page, data }: { page: LandingPageRecord; data: Loa
         <div className="lp-card lp-card-glow flex flex-col gap-5 p-6 sm:p-8">
           <h2 className="lp-heading text-center">{t("valueTitle")}</h2>
           <ul className="flex flex-col divide-y divide-border">
-            <li className="flex justify-between gap-4 py-3">
-              <span className="flex items-start gap-2">{check}{product.name}</span>
-              <span className="shrink-0 tabular-nums text-muted-foreground">{formatPrice(product.originalPrice ?? product.price)}</span>
-            </li>
+            {valueItems.map((item) => (
+              <li key={item.id} className="flex justify-between gap-4 py-3">
+                <span className="flex items-start gap-2">{check}{item.name}</span>
+                <span className="shrink-0 tabular-nums text-muted-foreground">{formatPrice(item.value)}</span>
+              </li>
+            ))}
             {content.bonuses.map((b, i) => (
               <li key={`${b.title}-${i}`} className="flex justify-between gap-4 py-3">
                 <span className="flex items-start gap-2">{check}{b.title}</span>
@@ -189,8 +346,8 @@ export function LandingView({ page, data }: { page: LandingPageRecord; data: Loa
             </li>
           </ul>
           <div className="flex flex-col items-center gap-1 text-center">
-            {worth > product.price && <p className="text-sm text-muted-foreground">{t("valueTotal")} <span className="line-through">{formatPrice(worth)}</span></p>}
-            <p className="text-lg">{t("valueToday")} <span className="text-3xl font-semibold tabular-nums">{formatPrice(product.price)}</span></p>
+            {worth > sale.price && <p className="text-sm text-muted-foreground">{t("valueTotal")} <span className="line-through">{formatPrice(worth)}</span></p>}
+            <p className="text-lg">{t("valueToday")} <span className="text-3xl font-semibold tabular-nums">{formatPrice(sale.price)}</span></p>
           </div>
           <div className="flex justify-center">{ctaButton()}</div>
         </div>
@@ -233,18 +390,19 @@ export function LandingView({ page, data }: { page: LandingPageRecord; data: Loa
         <div className={`grid gap-4 ${packs.length > 1 ? "sm:grid-cols-2" : ""}`}>
           {packs.map((pack, i) => {
             const saved = pack.compareAt && pack.compareAt > pack.price ? pack.compareAt - pack.price : 0;
-            const featured = pack.kind === "offer" && i === 1;
+            const featured = pack.kind === "offer" && (combo ? i === 0 : i === 1);
+            // A combo page leads with the combo across the full width; the single products follow.
             return (
-              <div key={pack.id} className={`lp-card flex flex-col gap-4 p-6 ${featured ? "lp-card-glow" : ""}`}>
+              <div key={pack.id} className={`lp-card flex flex-col gap-4 p-6 ${featured ? "lp-card-glow" : ""} ${featured && combo ? "sm:col-span-2" : ""}`}>
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="text-lg font-semibold">{pack.name}</span>
                   {pack.badge && <span className="rounded-full bg-primary px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary-foreground">{pack.badge}</span>}
                 </div>
-                <ul className="flex flex-col gap-1.5 text-sm">
-                  {(pack.includes ?? [{ productId: product.id, name: product.name }, ...content.bonuses.map((b, j) => ({ productId: `bonus-${j}`, name: b.title }))]).map((item) => (
+                {packIncludes(pack).length > 0 && <ul className="flex flex-col gap-1.5 text-sm">
+                  {packIncludes(pack).map((item) => (
                     <li key={item.productId} className="flex items-start gap-2"><Check className="mt-0.5 size-4 shrink-0 text-chart" aria-hidden="true" />{item.name}</li>
                   ))}
-                </ul>
+                </ul>}
                 <div className="mt-auto flex flex-col gap-1">
                   <div className="flex items-baseline gap-2">
                     <span className="text-3xl font-semibold tabular-nums">{formatPrice(pack.price)}</span>
@@ -253,7 +411,7 @@ export function LandingView({ page, data }: { page: LandingPageRecord; data: Loa
                   {saved > 0 && <span className="text-sm text-success">{t("youSave")} {formatPrice(saved)} ({Math.round((saved / pack.compareAt!) * 100)}% {t("percentOff")})</span>}
                 </div>
                 <CheckoutLink href={checkoutHref(pack)} className="lp-cta h-12 w-full px-6 text-base">
-                  {pack.kind === "offer" ? t("comboButton") : cta}
+                  {pack.kind === "offer" ? (combo ? cta : t("comboButton")) : combo ? t("buySingle") : cta}
                 </CheckoutLink>
               </div>
             );
@@ -304,7 +462,7 @@ export function LandingView({ page, data }: { page: LandingPageRecord; data: Loa
         <div className="mx-auto grid w-full max-w-5xl items-center gap-8 px-4 py-8 sm:gap-10 sm:px-5 sm:py-20 md:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)]">
           <div className="flex min-w-0 flex-col gap-4 text-center sm:gap-5 md:text-left">
             {content.eyebrow && <p className="lp-eyebrow">{content.eyebrow}</p>}
-            <h1 className="lp-title">{content.headline || product.name}</h1>
+            <h1 className="lp-title">{content.headline || sale.name}</h1>
             {content.subheadline && <p className="text-base whitespace-pre-line text-muted-foreground sm:text-lg">{content.subheadline}</p>}
             {content.heroBullets.length > 0 && (
               <ul className="flex flex-col gap-2 text-left">
@@ -315,10 +473,10 @@ export function LandingView({ page, data }: { page: LandingPageRecord; data: Loa
             )}
             {content.display.heroPrice && (
               <div className="flex flex-wrap items-baseline justify-center gap-3 md:justify-start">
-                <span className="text-3xl font-semibold tabular-nums">{formatPrice(product.price)}</span>
+                <span className="text-3xl font-semibold tabular-nums">{formatPrice(sale.price)}</span>
                 {percentOff !== null && (
                   <>
-                    <span className="text-lg text-muted-foreground line-through tabular-nums">{formatPrice(product.originalPrice!)}</span>
+                    <span className="text-lg text-muted-foreground line-through tabular-nums">{formatPrice(sale.originalPrice!)}</span>
                     <span className="rounded-full bg-primary px-2.5 py-0.5 text-xs font-semibold text-primary-foreground">{percentOff}% OFF</span>
                   </>
                 )}
@@ -330,9 +488,7 @@ export function LandingView({ page, data }: { page: LandingPageRecord; data: Loa
             </div>
             {content.display.heroRating && ratingSummary.count > 0 && (
               <p className="flex items-center justify-center gap-2 text-sm text-muted-foreground md:justify-start">
-                <span className="flex text-chart" aria-hidden="true">
-                  {Array.from({ length: 5 }, (_, i) => <Star key={i} className="size-4 fill-current" />)}
-                </span>
+                {stars("")}
                 {ratingSummary.average.toFixed(1)} from {ratingSummary.count.toLocaleString("en-IN")} reviews
               </p>
             )}
@@ -348,12 +504,21 @@ export function LandingView({ page, data }: { page: LandingPageRecord; data: Loa
                 className="max-h-[75vh] w-full"
               />
             </div>
+          ) : comboCovers.length > 0 ? (
+            // Combo without its own hero image: the products' covers side by side.
+            <div className={`lp-cover lp-cover-bleed order-first mx-auto grid w-full max-w-xl items-center gap-1 overflow-hidden rounded-2xl bg-black md:order-none ${comboCovers.length > 1 ? "grid-cols-2" : ""}`}>
+              {comboCovers.map((c, i) => (
+                // eslint-disable-next-line @next/next/no-img-element -- covers of unknown aspect; ImageKit resizes them
+                <img key={c.url + i} src={withTransform(c.url, "w-600")} alt={c.alt} fetchPriority={i < 2 ? "high" : undefined}
+                  className={`block h-auto ${comboCovers.length > 1 && comboCovers.length % 2 === 1 && i === comboCovers.length - 1 ? "col-span-2 mx-auto w-1/2" : "w-full"}`} />
+              ))}
+            </div>
           ) : cover && (
             // Natural aspect ratio: portrait book covers and 16:9 banners both show uncropped.
             // Phones: first thing on the page, edge to edge (lp-cover-bleed).
             <div className="lp-cover lp-cover-bleed order-first mx-auto w-full max-w-xl overflow-hidden rounded-2xl md:order-none">
               {/* eslint-disable-next-line @next/next/no-img-element -- cover of unknown aspect; ImageKit resizes it */}
-              <img src={withTransform(cover.url, "w-1200")} alt={cover.alt ?? product.name} fetchPriority="high" className="block h-auto w-full" />
+              <img src={withTransform(cover.url, "w-1200")} alt={cover.alt ?? sale.name} fetchPriority="high" className="block h-auto w-full" />
             </div>
           )}
         </div>
@@ -363,8 +528,8 @@ export function LandingView({ page, data }: { page: LandingPageRecord; data: Loa
 
       {content.display.stickyBar && (
         <StickyCta
-          price={formatPrice(product.price)}
-          compareAt={percentOff !== null ? formatPrice(product.originalPrice!) : null}
+          price={formatPrice(sale.price)}
+          compareAt={percentOff !== null ? formatPrice(sale.originalPrice!) : null}
           label={cta}
           checkoutHref={direct ? checkoutHref(packs[0]) : null}
         />

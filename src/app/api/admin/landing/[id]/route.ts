@@ -5,6 +5,7 @@ import { getAdminSession } from "@/lib/admin-auth";
 import { SLUG_RE, landingContentSchema } from "@/lib/landing";
 import { isMainHost, normalizeDomain } from "@/lib/hosts";
 import { isUniqueViolation } from "@/lib/admin-offers";
+import { getAllOffers } from "@/lib/offers";
 
 const DOMAIN_RE = /^(?=.{1,253}$)([a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/;
 
@@ -35,6 +36,12 @@ export async function PATCH(request: NextRequest, { params }: RouteContext<"/api
     const result = landingContentSchema.safeParse(content);
     if (!result.success) return NextResponse.json({ error: "Some page content is invalid" }, { status: 400 });
     values.content = JSON.stringify(result.data);
+    // A combo page's product is the combo's first product (kept for reports and fallbacks).
+    if (result.data.comboOfferId) {
+      const offer = (await getAllOffers()).find((o) => o.id === result.data.comboOfferId);
+      if (!offer?.items.length) return NextResponse.json({ error: "Combo not found" }, { status: 404 });
+      values.productId = offer.items[0].productId;
+    }
   }
   if (fields.productId && !(await db.orm.public.Product.first({ id: fields.productId }))) {
     return NextResponse.json({ error: "Product not found" }, { status: 404 });

@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
-import { CheckoutPanel, type Pack } from "@/components/checkout/checkout-panel";
+import { CheckoutPanel, type AddOn, type Pack } from "@/components/checkout/checkout-panel";
 import { CheckoutTracker } from "@/components/checkout/checkout-tracker";
 import { getActiveOffer, getActiveOffers, getActiveOffersForProduct } from "@/lib/offers";
 import { getLandingPage } from "@/lib/landing";
-import { pickUtm, VISITOR_ID_RE } from "@/lib/tracking";
+import { pickUtm, VISITOR_ID_RE, type Utm } from "@/lib/tracking";
 import { db } from "@/lib/db";
 import { activeProductBySlug, addOnOptions, offerPack, productPack } from "@/lib/checkout-options";
 
@@ -21,6 +21,26 @@ export default async function CheckoutPage({ searchParams }: PageProps<"/checkou
   const vid = one("vid");
   const visitorId = vid && VISITOR_ID_RE.test(vid) ? vid : undefined;
   const utm = pickUtm(params);
+
+  // A combo landing page: the combo, or any one of its products on its own.
+  const landingCombo = landing?.content.comboOfferId ? await getActiveOffer({ id: landing.content.comboOfferId }) : null;
+  if (landing && landingCombo) {
+    const products = await Promise.all(landingCombo.items.map((i) => activeProductBySlug(i.slug)));
+    const comboProducts = products.filter((p) => !!p);
+    const chosen = comboProducts.find((p) => p.slug === one("product"));
+    const extra = landing.content.addOnProductIds.filter((id) => !comboProducts.some((p) => p.id === id));
+    return (
+      <CheckoutLayout
+        packs={[offerPack(landingCombo), ...comboProducts.map(productPack)]}
+        // Bought singly, the combo's other products are one tap away as add-ons.
+        addOns={await addOnOptions({ exclude: [], onlyIds: [...comboProducts.map((p) => p.id), ...extra] })}
+        initialPackId={chosen?.id ?? landingCombo.id}
+        landing={landing}
+        visitorId={visitorId}
+        utm={utm}
+      />
+    );
+  }
 
   // ?offer=<slug> checks out a combo; ?product=<slug> a product, with its combos offered as upgrades.
   const offer = one("offer") ? await getActiveOffer({ slug: one("offer")! }) : null;
@@ -57,6 +77,17 @@ export default async function CheckoutPage({ searchParams }: PageProps<"/checkou
     addOns = await addOnOptions({ exclude: [product!.id] });
   }
 
+  return <CheckoutLayout packs={packs} addOns={addOns} initialPackId={offer?.id} landing={landing} visitorId={visitorId} utm={utm} />;
+}
+
+function CheckoutLayout({ packs, addOns, initialPackId, landing, visitorId, utm }: {
+  packs: Pack[];
+  addOns: AddOn[];
+  initialPackId?: string;
+  landing: { slug: string } | null;
+  visitorId?: string;
+  utm: Utm;
+}) {
   return (
     <main className="mx-auto flex w-full max-w-(--breakpoint-sm) flex-1 flex-col gap-6 px-6 py-12">
       {landing && visitorId && <CheckoutTracker slug={landing.slug} visitorId={visitorId} utm={utm} />}
@@ -64,7 +95,7 @@ export default async function CheckoutPage({ searchParams }: PageProps<"/checkou
       <CheckoutPanel
         packs={packs}
         addOns={addOns}
-        initialPackId={offer?.id}
+        initialPackId={initialPackId}
         attribution={landing ? { source: landing.slug, visitorId, utm } : undefined}
       />
     </main>

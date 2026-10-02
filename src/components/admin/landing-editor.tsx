@@ -13,7 +13,7 @@ import { MediaField } from "@/components/media/media-field";
 
 type Page = { id: string; name: string; slug: string; productId: string; domain: string | null; isActive: boolean; content: LandingContent };
 type ProductOption = { id: string; name: string; price: number; isActive: boolean };
-type OfferOption = { id: string; name: string; price: number; isActive: boolean; items: string[] };
+type OfferOption = { id: string; name: string; price: number; isActive: boolean; items: string[]; productIds: string[] };
 
 /** ISO → value for <input type="datetime-local"> in the admin's own timezone. */
 function toLocalInput(iso: string | null) {
@@ -75,7 +75,9 @@ export function LandingEditor({ page, products, offers }: { page: Page; products
   }
 
   const activeProducts = products.filter((p) => p.isActive);
-  const order = sectionOrder(content);
+  const combo = content.comboOfferId ? offers.find((o) => o.id === content.comboOfferId) : null;
+  // "Products in the combo" only exists on combo pages.
+  const order = sectionOrder(content).filter((s) => content.comboOfferId || s.key !== "products");
   const moveSection = (from: number, to: number) => {
     const next = [...order];
     const [item] = next.splice(from, 1);
@@ -87,21 +89,35 @@ export function LandingEditor({ page, products, offers }: { page: Page; products
   return (
     <div className={cn("grid gap-6 pb-24", preview && "xl:grid-cols-[minmax(0,1fr)_420px] 2xl:grid-cols-[minmax(0,1fr)_520px]")}>
     <div className="flex min-w-0 flex-col gap-4">
-      {products.find((p) => p.id === meta.productId)?.isActive === false && (
+      {content.comboOfferId && combo?.isActive !== true && (
+        <p role="alert" className="rounded-2xl border border-destructive/40 bg-destructive/10 px-5 py-3 text-sm">
+          This page&apos;s combo is switched off or deleted, so the page can&apos;t be shown. Turn it on under Combos (it needs at least two listed products) or pick another combo.
+        </p>
+      )}
+      {!content.comboOfferId && products.find((p) => p.id === meta.productId)?.isActive === false && (
         <p role="alert" className="rounded-2xl border border-destructive/40 bg-destructive/10 px-5 py-3 text-sm">
           This page&apos;s product is retired, so checkout can&apos;t sell it. Re-list it under Products (Edit details → “Listed in the store”) before publishing.
         </p>
       )}
 
-      <Section title="Page settings" hint="Name, address, product and domain" defaultOpen>
+      <Section title="Page settings" hint={`Name, address, ${content.comboOfferId ? "combo" : "product"} and domain`} defaultOpen>
         <div className="grid gap-4 sm:grid-cols-3">
           <Field label="Page name (internal)"><TextInput value={meta.name} onChange={(e) => setM({ name: e.target.value })} /></Field>
           <Field label="URL slug" hint={`/lp/${meta.slug}`}><TextInput value={meta.slug} onChange={(e) => setM({ slug: slugify(e.target.value) })} /></Field>
-          <Field label="Product it sells">
-            <select className={inputClass} value={meta.productId} onChange={(e) => setM({ productId: e.target.value })}>
-              {products.map((p) => <option key={p.id} value={p.id}>{p.name}{p.isActive ? "" : " (retired)"}</option>)}
-            </select>
-          </Field>
+          {content.comboOfferId ? (
+            <Field label="Combo it sells" hint={combo ? combo.items.join(" + ") : undefined}>
+              <select className={inputClass} value={content.comboOfferId} onChange={(e) => set({ comboOfferId: e.target.value })}>
+                {!combo && <option value={content.comboOfferId}>(deleted combo)</option>}
+                {offers.map((o) => <option key={o.id} value={o.id}>{o.name}{o.isActive ? "" : " (off)"}</option>)}
+              </select>
+            </Field>
+          ) : (
+            <Field label="Product it sells">
+              <select className={inputClass} value={meta.productId} onChange={(e) => setM({ productId: e.target.value })}>
+                {products.map((p) => <option key={p.id} value={p.id}>{p.name}{p.isActive ? "" : " (retired)"}</option>)}
+              </select>
+            </Field>
+          )}
         </div>
         <Field label="Page language" hint="Sets the language for browsers and screen readers. Malayalam pages use a Malayalam font.">
           <select className={inputClass} value={content.language} onChange={(e) => set({ language: e.target.value as LandingContent["language"] })}>
@@ -174,6 +190,23 @@ export function LandingEditor({ page, products, offers }: { page: Page; products
           <MediaField kind="video" folder="landing" value={content.heroVideoUrl} onChange={(heroVideoUrl) => set({ heroVideoUrl })} />
         </Field>
       </Section>
+
+      {combo && (
+        <Section title="Combo products" hint="This page's own description and points for each product — e.g. in the page's language. Empty uses the product's own.">
+          {combo.productIds.map((productId, i) => {
+            const own = content.productDetails.find((d) => d.productId === productId) ?? { productId, description: "", points: [] };
+            const update = (patch: Partial<typeof own>) =>
+              set({ productDetails: [...content.productDetails.filter((d) => d.productId !== productId), { ...own, ...patch }] });
+            return (
+              <div key={productId} className="flex flex-col gap-3 rounded-xl border border-border p-4">
+                <span className="text-sm font-semibold">{combo.items[i]}</span>
+                <Field label="Description"><TextArea rows={5} maxLength={3000} value={own.description} onChange={(e) => update({ description: e.target.value })} /></Field>
+                <LinesField label="Points (one per line)" rows={6} value={own.points} onChange={(points) => update({ points })} />
+              </div>
+            );
+          })}
+        </Section>
+      )}
 
       <Section title="Pain points" hint="“Has this ever happened to you?” — problems the reader recognises">
         <Field label="Section title"><TextInput value={content.painTitle} placeholder="Has this ever happened to you?" onChange={(e) => set({ painTitle: e.target.value })} /></Field>
@@ -262,7 +295,12 @@ export function LandingEditor({ page, products, offers }: { page: Page; products
       </Section>
 
       <Section title="Packs & add-ons" hint="Packs shown on the page; add-ons offered at checkout" defaultOpen>
-        <Field label="Combo packs" hint="Shown as pack cards next to the single product, in the order ticked; each opens checkout with that pack chosen. Manage combos under Combos.">
+        {combo && (
+          <p className="text-xs text-muted-foreground">
+            Packs: the combo ({formatPrice(combo.price)}) followed by each of its products on its own. When a buyer picks one product, the combo&apos;s other products are offered as add-ons at checkout.
+          </p>
+        )}
+        {!content.comboOfferId && <Field label="Combo packs" hint="Shown as pack cards next to the single product, in the order ticked; each opens checkout with that pack chosen. Manage combos under Combos.">
           {offers.length ? (
             <ProductPicker
               products={offers.map((o) => ({ id: o.id, name: `${o.name} — ${o.items.join(" + ")}`, price: o.price, isActive: o.isActive }))}
@@ -272,17 +310,17 @@ export function LandingEditor({ page, products, offers }: { page: Page; products
           ) : (
             <p className="text-xs text-muted-foreground">No combos yet.</p>
           )}
-        </Field>
-        <Field label="Add-on products" hint="One-tap extras offered at checkout for visitors from this page (order bumps).">
+        </Field>}
+        <Field label={combo ? "Extra add-on products" : "Add-on products"} hint="One-tap extras offered at checkout for visitors from this page (order bumps).">
           <ProductPicker
-            products={activeProducts.filter((p) => p.id !== meta.productId)}
+            products={activeProducts.filter((p) => (combo ? !combo.productIds.includes(p.id) : p.id !== meta.productId))}
             value={content.addOnProductIds}
             onChange={(addOnProductIds) => set({ addOnProductIds })}
           />
         </Field>
         {(() => {
           const product = products.find((p) => p.id === meta.productId);
-          return product ? <p className="text-xs text-muted-foreground">Single product price: {formatPrice(product.price)} (change it under Products).</p> : null;
+          return product && !content.comboOfferId ? <p className="text-xs text-muted-foreground">Single product price: {formatPrice(product.price)} (change it under Products).</p> : null;
         })()}
       </Section>
 
@@ -290,6 +328,13 @@ export function LandingEditor({ page, products, offers }: { page: Page; products
         <div className="grid gap-3 sm:grid-cols-2">
           {([
             ["heroTrust", "Hero: line under the button"],
+            ...(content.comboOfferId ? [
+              ["productsEyebrow", "Combo products: small heading"],
+              ["productsTitle", "Combo products: title"],
+              ["buySingle", "“Buy just this” button"],
+              ["freeSample", "Free preview link"],
+              ["seeAll", "“See everything inside” link"],
+            ] as const : []),
             ["countdown", "Countdown text"],
             ["insideEyebrow", "What's inside: small heading"],
             ["bonusesEyebrow", "Bonuses: small heading"],
@@ -394,5 +439,8 @@ function cleanContent(c: LandingContent): LandingContent {
     bonuses: c.bonuses.filter((b) => b.title.trim()),
     testimonials: c.testimonials.filter((t) => t.text.trim() || t.imageUrl.trim() || t.videoUrl.trim()),
     faqs: c.faqs.filter((f) => f.question.trim() && f.answer.trim()),
+    productDetails: c.productDetails
+      .map((d) => ({ ...d, description: d.description.trim(), points: lines(d.points) }))
+      .filter((d) => d.description || d.points.length),
   };
 }

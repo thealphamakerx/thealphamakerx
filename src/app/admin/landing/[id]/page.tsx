@@ -58,7 +58,7 @@ export default async function AdminLandingEditPage({ params }: PageProps<"/admin
       <LandingEditor
         page={{ id: page.id, name: page.name, slug: page.slug, productId: page.productId, domain: page.domain ?? null, isActive: page.isActive, content: parseLandingContent(page.content) }}
         products={products.map((p) => ({ id: p.id, name: p.name, price: p.price, isActive: p.isActive }))}
-        offers={offers.map((o) => ({ id: o.id, name: o.name, price: o.price, isActive: o.isActive, items: o.items.map((i) => i.name) }))}
+        offers={offers.map((o) => ({ id: o.id, name: o.name, price: o.price, isActive: o.isActive, items: o.items.map((i) => i.name), productIds: o.items.map((i) => i.productId) }))}
       />
     </div>
   );
